@@ -1,0 +1,22 @@
+name: dotaengineer
+version: "0.1.0"
+config-version: 2
+
+profile: dotaengineer
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  dotaengineer:
+    staging:
+      +schema: staging
+      +materialized: view
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+    marts:
+      +schema: marts
+      +materialized: table

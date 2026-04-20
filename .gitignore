@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Data (don't commit raw/processed data)
+data/raw/
+data/processed/
+data/*.duckdb
+data/*.duckdb.wal
+
+# Secrets
+.env
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
