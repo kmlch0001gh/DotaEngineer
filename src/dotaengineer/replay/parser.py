@@ -156,6 +156,7 @@ def _java_json_to_match(data: dict, replay_path: Path) -> MatchCreate:
         radiant_score=data.get("radiant_score", 0),
         dire_score=data.get("dire_score", 0),
         players=players,
+        bans=data.get("bans", []),
         source="replay",
         replay_file=str(replay_path),
     )

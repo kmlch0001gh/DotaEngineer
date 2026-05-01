@@ -272,6 +272,62 @@ def parse_replay_cmd(
         con.close()
 
 
+@app.command("backfill-bans")
+def backfill_bans_cmd(
+    replay_dir: str = typer.Argument("data/replays", help="Directory with .dem replay files"),
+):
+    """Add bans to existing matches that were parsed before ban tracking.
+
+    Parses each replay, finds the matching match by replay_file path,
+    and inserts bans if the match doesn't have them yet.
+    Safe to run multiple times — skips matches that already have bans.
+    Does NOT modify players, claims, or ELO.
+    """
+    from dotaengineer.db import get_connection, release_connection
+    from dotaengineer.replay.parser import parse_replay
+    from dotaengineer.services.match_service import backfill_bans
+
+    replay_path = Path(replay_dir)
+    if not replay_path.exists():
+        console.print(f"[bold red]Directory not found: {replay_path}[/]")
+        raise typer.Exit(1)
+
+    files = sorted(replay_path.glob("*.dem"))
+    if not files:
+        console.print("[bold red]No .dem files found.[/]")
+        raise typer.Exit(1)
+
+    console.print(f"[bold]Scanning {len(files)} replays for bans...[/]")
+
+    con = get_connection()
+    total = 0
+    for f in files:
+        result = parse_replay(f)
+        if not result or not result.bans:
+            continue
+
+        # Find match by replay_file path
+        row = con.execute(
+            "SELECT id FROM matches WHERE replay_file = ?",
+            [str(f)],
+        ).fetchone()
+
+        if not row:
+            console.print(f"  [dim]{f.name}: no matching match in DB[/]")
+            continue
+
+        match_id = row[0]
+        inserted = backfill_bans(match_id, result.bans, con)
+        if inserted > 0:
+            console.print(f"  {f.name} → Match #{match_id}: {inserted} bans added")
+            total += inserted
+        else:
+            console.print(f"  [dim]{f.name} → Match #{match_id}: already has bans[/]")
+
+    release_connection(con)
+    console.print(f"[bold green]Done. {total} bans added total.[/]")
+
+
 @app.command("watch")
 def watch_replays(
     dir: str = typer.Option("", help="Replay directory to watch"),

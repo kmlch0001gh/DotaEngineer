@@ -36,6 +36,7 @@ class MatchCreate(BaseModel):
     dire_score: int = 0
     notes: str = ""
     players: list[MatchPlayerCreate] = Field(min_length=2, max_length=10)
+    bans: list[int] = Field(default_factory=list)  # hero IDs banned during draft
     source: str = "manual"
     replay_file: str | None = None
 

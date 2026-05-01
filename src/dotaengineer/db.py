@@ -87,12 +87,24 @@ CREATE TABLE IF NOT EXISTS mmr_history (
     UNIQUE(player_id, match_id)
 );
 
+-- Match Bans (heroes banned during draft)
+CREATE TABLE IF NOT EXISTS match_bans (
+    id              SERIAL PRIMARY KEY,
+    match_id        INTEGER NOT NULL REFERENCES matches(id) ON DELETE CASCADE,
+    hero_id         INTEGER NOT NULL,
+    hero_name       VARCHAR NOT NULL,
+    ban_order       INTEGER NOT NULL,
+    UNIQUE(match_id, ban_order)
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_match_players_match ON match_players(match_id);
 CREATE INDEX IF NOT EXISTS idx_match_players_player ON match_players(player_id);
 CREATE INDEX IF NOT EXISTS idx_match_players_hero ON match_players(hero_id);
 CREATE INDEX IF NOT EXISTS idx_mmr_history_player ON mmr_history(player_id);
 CREATE INDEX IF NOT EXISTS idx_matches_played_at ON matches(played_at DESC);
+CREATE INDEX IF NOT EXISTS idx_match_bans_match ON match_bans(match_id);
+CREATE INDEX IF NOT EXISTS idx_match_bans_hero ON match_bans(hero_id);
 """
 
 

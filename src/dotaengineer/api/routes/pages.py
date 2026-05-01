@@ -20,11 +20,19 @@ router = APIRouter(tags=["pages"])
 def home(request: Request, con: Connection = Depends(get_db)):
     stats = leaderboard_service.get_cafe_stats(con)
     leaderboard = leaderboard_service.get_leaderboard(con, limit=5)
+    top_picks = leaderboard_service.get_top_heroes_picked(con, limit=5)
+    top_bans = leaderboard_service.get_top_heroes_banned(con, limit=5)
     matches, _ = match_service.list_matches(page=1, per_page=5, con=con)
     return templates.TemplateResponse(
         request,
         "index.html",
-        {"stats": stats, "leaderboard": leaderboard, "matches": matches},
+        {
+            "stats": stats,
+            "leaderboard": leaderboard,
+            "top_picks": top_picks,
+            "top_bans": top_bans,
+            "matches": matches,
+        },
     )
 
 

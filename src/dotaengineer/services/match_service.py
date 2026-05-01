@@ -72,8 +72,44 @@ def create_match(data: MatchCreate, con: Connection) -> int:
             ],
         )
 
-    log.info("match_created", match_id=match_id, source=data.source)
+    # Insert bans
+    for i, hero_id in enumerate(data.bans):
+        if hero_id <= 0:
+            continue
+        ban_hero_name = get_hero_name(hero_id)
+        con.execute(
+            """INSERT INTO match_bans (match_id, hero_id, hero_name, ban_order)
+               VALUES (?, ?, ?, ?)""",
+            [match_id, hero_id, ban_hero_name, i],
+        )
+
+    log.info("match_created", match_id=match_id, source=data.source, bans=len(data.bans))
     return match_id
+
+
+def backfill_bans(match_id: int, bans: list[int], con: Connection) -> int:
+    """Add bans to an existing match without modifying anything else.
+
+    Skips if the match already has bans. Returns number of bans inserted.
+    """
+    existing = con.execute(
+        "SELECT count(*) FROM match_bans WHERE match_id = ?", [match_id]
+    ).fetchone()[0]
+    if existing > 0:
+        return 0
+
+    count = 0
+    for i, hero_id in enumerate(bans):
+        if hero_id <= 0:
+            continue
+        ban_hero_name = get_hero_name(hero_id)
+        con.execute(
+            """INSERT INTO match_bans (match_id, hero_id, hero_name, ban_order)
+               VALUES (?, ?, ?, ?)""",
+            [match_id, hero_id, ban_hero_name, i],
+        )
+        count += 1
+    return count
 
 
 def get_match(match_id: int, con: Connection) -> CafeMatch | None:

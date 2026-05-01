@@ -66,6 +66,7 @@ public class DotaCafeParser {
     float gameStartTime = 0;
     int totalPausedTicks = 0;
     int gameWinnerEntity = 0;
+    final int[] bannedHeroes = new int[24]; // up to 24 bans in CM
 
     // Controller info: playerID → {teamNum, playerName}
     // Collected via OnEntityCreated + OnEntityUpdated
@@ -132,6 +133,10 @@ public class DotaCafeParser {
                 if (pt > 0) totalPausedTicks = pt;
                 int gw = ri(e, "m_pGameRules.m_nGameWinner");
                 if (gw > 0) gameWinnerEntity = gw;
+                for (int i = 0; i < 24; i++) {
+                    int bh = ri(e, "m_pGameRules.m_BannedHeroes." + pad(i));
+                    if (bh > 0) bannedHeroes[i] = bh;
+                }
             }
         } catch (Exception ex) {
             // ignore
@@ -288,6 +293,13 @@ public class DotaCafeParser {
         result.put("dire_score", parser.direHeroKills);
         result.put("is_lan", isLan);
         result.put("players", players);
+
+        // Banned heroes (non-zero IDs)
+        List<Integer> bans = new ArrayList<>();
+        for (int bh : parser.bannedHeroes) {
+            if (bh > 0) bans.add(bh);
+        }
+        result.put("bans", bans);
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         System.out.println(gson.toJson(result));
