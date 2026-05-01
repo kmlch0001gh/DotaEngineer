@@ -10,21 +10,29 @@ build/
 .ruff_cache/
 .pytest_cache/
 
-# Data (don't commit raw/processed data)
-data/raw/
-data/processed/
+# Data
+data/replays/
 data/*.duckdb
 data/*.duckdb.wal
+data/dotacafe-parser.jar
+data/backups/
+data/raw/
+data/processed/
+data/test.py
+*.duckdb
 
 # Secrets
 .env
 
-# dbt
-dbt/target/
-dbt/dbt_packages/
+# IDE
+.idea/
 
-# Notebooks
-.ipynb_checkpoints/
+# Java build artifacts
+tools/replay-parser/target/
+tools/replay-parser/dependency-reduced-pom.xml
 
 # OS
 .DS_Store
+
+# Misc
+src/__init__.py

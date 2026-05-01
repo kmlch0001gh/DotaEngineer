@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Ranking — {{ cafe_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Ranking</h1>
+    {% if is_admin %}
+    <form hx-post="/api/recalc-elo" hx-swap="none">
+        <button type="submit" class="btn btn-secondary btn-sm"
+                onclick="return confirm('Recalcular todo el ELO desde cero?')">
+            Recalcular ELO
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+{% if leaderboard %}
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:50px;">#</th>
+                    <th>Jugador</th>
+                    <th>MMR</th>
+                    <th>Partidas</th>
+                    <th>W/L</th>
+                    <th>Win Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in leaderboard %}
+                <tr>
+                    <td>
+                        {% if p.rank == 1 %}
+                        <span style="font-size:1.25rem;">&#127942;</span>
+                        {% elif p.rank == 2 %}
+                        <span style="font-size:1.25rem;">&#129352;</span>
+                        {% elif p.rank == 3 %}
+                        <span style="font-size:1.25rem;">&#129353;</span>
+                        {% else %}
+                        <span class="font-bold text-muted">{{ p.rank }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="/players/{{ p.id }}" class="font-bold">{{ p.display_name }}</a>
+                        <span class="text-muted text-xs">@{{ p.username }}</span>
+                    </td>
+                    <td>
+                        <span class="font-mono font-bold text-lg" style="color:var(--accent);">{{ p.mmr }}</span>
+                    </td>
+                    <td>{{ p.games_played }}</td>
+                    <td class="font-mono">
+                        <span class="win">{{ p.wins }}</span> / <span class="loss">{{ p.losses }}</span>
+                    </td>
+                    <td>
+                        <span class="{% if p.win_rate_pct|float >= 50 %}win{% else %}loss{% endif %}">
+                            {{ p.win_rate_pct }}%
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card text-center">
+    <p class="text-muted">El ranking aparecerá cuando se jueguen partidas y los jugadores reclamen sus slots.</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Auto-Balance — {{ cafe_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Auto-Balance de Equipos</h1>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">Seleccionar Jugadores</div>
+    <p class="text-muted text-sm mb-3">
+        Selecciona los jugadores que van a jugar. El sistema creará los equipos más equilibrados posibles.
+    </p>
+
+    <form id="balance-form" hx-post="/api/balance" hx-target="#balance-result" hx-swap="innerHTML">
+        <input type="hidden" name="player_ids" id="player-ids-input">
+
+        <div class="grid grid-3 mb-4">
+            {% for p in players %}
+            <label class="card flex items-center gap-2" style="padding:0.75rem;cursor:pointer;margin-bottom:0;">
+                <input type="checkbox" class="player-checkbox" value="{{ p.id }}"
+                       onchange="updatePlayerIds()">
+                <div style="flex:1;">
+                    <div class="font-bold text-sm">{{ p.display_name }}</div>
+                    <div class="text-xs text-muted">MMR: {{ p.mmr }} — {{ p.games_played }} games</div>
+                </div>
+            </label>
+            {% endfor %}
+        </div>
+
+        {% if players %}
+        <div class="flex gap-2 items-center">
+            <button type="submit" class="btn btn-primary" onclick="return updatePlayerIds()">
+                Balancear Equipos
+            </button>
+            <span class="text-muted text-sm" id="selected-count">0 jugadores seleccionados</span>
+        </div>
+        {% else %}
+        <p class="text-muted">Registra jugadores primero para usar esta herramienta.</p>
+        {% endif %}
+    </form>
+</div>
+
+<div id="balance-result"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updatePlayerIds() {
+    const checkboxes = document.querySelectorAll('.player-checkbox:checked');
+    const ids = Array.from(checkboxes).map(cb => cb.value);
+    document.getElementById('player-ids-input').value = ids.join(',');
+    document.getElementById('selected-count').textContent = ids.length + ' jugadores seleccionados';
+
+    if (ids.length < 2) {
+        alert('Selecciona al menos 2 jugadores');
+        return false;
+    }
+    return true;
+}
+</script>
+{% endblock %}

@@ -19,76 +19,128 @@ mypy src/
 pytest
 
 # Run a single test file
-pytest tests/unit/test_models.py
+pytest tests/unit/test_elo.py
 
-# Run a single test by name
-pytest tests/unit/test_models.py::test_player_kda
+# Start web server
+dotaengineer serve
+dotaengineer serve --port 3000 --reload
 
-# Infrastructure (PostgreSQL + Prefect server)
-docker compose up -d
+# Database
+dotaengineer init-db              # create schema (auto on serve)
+dotaengineer backup               # timestamped backup
 
-# Pipelines
-dotaengineer ingest meta
-dotaengineer ingest player --limit 200
+# Players
+dotaengineer add-player USERNAME --display-name "Name"
 
-# Servers
-dotaengineer serve api --reload        # FastAPI on :8000
-dotaengineer serve dashboard           # Streamlit
+# ELO
+dotaengineer recalc-elo           # recalculate all ratings from scratch
 
-# dbt
-cd dbt && dbt run && dbt test
+# Hero data (needs internet)
+dotaengineer fetch-heroes         # download from OpenDota API
 ```
+
+## Environment
+
+Required in `.env` (see `.env.example`):
+- `CAFE_NAME` — display name for the cafe (default: "Dota Cafe")
+- `DUCKDB_PATH` — path to database file (default: `./data/cafe.duckdb`)
+- `REPLAY_WATCH_DIR` — optional: Dota 2 replay directory for auto-parsing
 
 ## Architecture
 
 ### Data flow
 
 ```
-OpenDota REST + Stratz GraphQL
-        │
-        ▼
-Prefect pipelines (src/pipelines/)
-  → write raw JSON to data/raw/
-  → load into DuckDB (data/warehouse.duckdb)
-        │
-        ▼
-dbt models (dbt/models/)
-  staging/ → intermediate/ → marts/
-        │
-        ▼
-Analysis layer (src/analysis/)  ← reads from DuckDB
-  ├── draft.py      — counter-pick / synergy scoring
-  ├── meta.py       — tier list, sleeper picks, patch delta
-  └── player_performance.py — personal WR vs meta baseline
-        │
-    ┌───┴────────┐
-    ▼            ▼
-FastAPI      Streamlit
-(:8000)      dashboard
+Dota 2 LAN Game (host PC, map dota captain_mode)
+    → .dem replay file (if tv_autorecord 1)
+    → OR manual match entry via web form
+         ↓
+    File watcher (watchdog) OR manual upload OR web form
+         ↓
+    FastAPI + Jinja2/HTMX web app (same PC, :8000)
+         ↓
+    DuckDB database (data/cafe.duckdb)
+         ↓
+    Responsive web UI (mobile-first, dark theme)
+    ├── Dashboard (stats, recent matches, top players)
+    ├── Match history + detail with claim buttons
+    ├── Player profiles (stats, hero breakdown, MMR chart)
+    ├── ELO leaderboard
+    └── Auto-balance teams tool
 ```
 
 ### Key design decisions
 
-**DuckDB as the analytics engine.** All analysis classes open a DuckDB connection directly against `data/warehouse.duckdb`. There is no ORM — queries are raw SQL that returns `polars.DataFrame`. Avoid adding an ORM layer.
+**DuckDB as the single database.** All data stored in `data/cafe.duckdb`. Connections are opened per-request via FastAPI dependency injection. Schema initialized on server startup.
 
-**Two ingestion sources with different strengths.** OpenDota provides `/heroStats`, matchup matrices, and item timing scenarios. Stratz (GraphQL) provides bracket-filtered win rates, laning outcomes, and `imp` (impact score). When both cover the same metric, Stratz immortal data takes precedence in the dbt mart (`hero_meta_immortal`).
+**Offline-first.** HTMX and all CSS are bundled in `static/`. Hero data is a static JSON file. The app works fully on LAN with no internet. CDN is never required.
 
-**dbt models feed the analysis layer.** The analysis classes in `src/analysis/` query tables that dbt materialises (`hero_meta_immortal`, `hero_matchups_immortal`, `hero_duos_immortal`, etc.). If a table doesn't exist yet, the analysis query will fail — the pipeline must be run first.
+**Team-based ELO.** Rating system uses team average MMR with expected score formula. K=48 for first 10 games (calibration), K=32 after. Floor at 100 MMR. ELO triggers automatically when all 10 match slots are claimed.
 
-**Rate limiting lives in `ingestion/base.py`.** `RateLimiter` is a token-bucket async limiter. Both `OpenDotaClient` and `StratzClient` inherit from or compose `BaseAPIClient`. All API calls go through `_get()` which enforces the limiter and applies retries via tenacity.
+**Player claiming flow.** After a match is entered, players "claim" their hero slot from the match detail page. Optional 4-digit PIN for identity protection. When all 10 claimed → ELO auto-calculates.
 
-**All analysis classes are stateless.** They open a read-only DuckDB connection per method call. No connection pooling — DuckDB handles it.
+**Auto-balance.** For ≤12 players, brute-forces all C(n, n/2) combinations to find minimum MMR difference. Returns predicted win probability per team.
 
-### MMR bracket conventions
+### Module structure
 
-- `high_mmr_threshold` in `config.py` (default 7000) controls what counts as "high MMR" for filtering
-- OpenDota rank tiers: 80 = Immortal, 70 = Divine. The pipelines filter `min_rank=70` by default
-- Stratz bracket enum: `IMMORTAL` is the target for all hero stats queries
+```
+src/dotaengineer/
+├── config.py              — pydantic-settings, singleton `settings`
+├── db.py                  — DuckDB schema + connection management
+├── elo.py                 — Team-based ELO calculation engine
+├── cli.py                 — Typer CLI commands
+├── models/                — Pydantic v2 models
+│   ├── hero.py            — Hero data loader (static JSON)
+│   ├── player.py          — Player, PlayerCreate, PlayerStats
+│   └── match.py           — CafeMatch, MatchCreate, MatchPlayer
+├── services/              — Business logic (stateless, take DuckDB con)
+│   ├── match_service.py   — Match CRUD + claiming
+│   ├── player_service.py  — Player CRUD + stats aggregation
+│   ├── leaderboard_service.py — Rankings + cafe stats
+│   └── balance_service.py — Auto-balance algorithm
+├── api/                   — FastAPI web application
+│   ├── app.py             — App factory, Jinja2 + static files setup
+│   └── routes/            — Route modules (pages, matches, players, leaderboard)
+├── replay/                — Replay parsing (optional enhancement)
+│   ├── parser.py          — .dem file parser
+│   └── watcher.py         — watchdog file observer
+├── templates/             — Jinja2 HTML templates (dark Dota theme)
+└── static/                — Bundled assets (htmx.min.js, heroes.json, icons)
+```
 
-### DuckDB table naming
+### API endpoints
 
-Tables consumed by the analysis layer follow the pattern `{entity}_{context}` (e.g. `hero_meta_immortal`, `hero_matchups_immortal`, `player_matches`). The `player_matches` table is the personal fact table — it stores one row per match per player slot for `MY_STEAM_ID`.
+```
+Page routes (return HTML):
+GET  /                         — dashboard
+GET  /matches                  — match history (paginated)
+GET  /matches/new              — manual match entry form
+GET  /matches/{id}             — match detail + claim buttons
+GET  /players                  — player list
+GET  /players/register         — registration form
+GET  /players/{id}             — player profile
+GET  /leaderboard              — ELO rankings
+GET  /balance                  — auto-balance tool
+
+API routes (HTMX / JSON):
+POST /api/matches              — create match from form
+POST /api/matches/{id}/claim   — claim hero slot
+POST /api/matches/{id}/force-elo — force ELO with partial claims
+POST /api/matches/{id}/delete  — delete match + recalc ELO
+POST /api/players              — register player
+POST /api/players/hero-search  — hero autocomplete
+POST /api/balance              — auto-balance teams
+POST /api/recalc-elo           — recalculate all ELO
+GET  /api/leaderboard          — leaderboard JSON
+```
+
+### DuckDB tables
+
+- `players` — registered cafe players (username, display_name, mmr, wins, losses)
+- `matches` — match records (played_at, radiant_win, duration, scores, source)
+- `match_players` — 10 rows per match (hero, team, stats, player_id nullable until claimed)
+- `mmr_history` — one row per player per match (mmr_before, mmr_after, mmr_change)
 
 ### Config
 
-All settings come from `src/dotaengineer/config.py` via `pydantic-settings`. The singleton `settings` is imported directly — do not instantiate `Settings()` elsewhere.
+All settings come from `src/dotaengineer/config.py` via `pydantic-settings`. The singleton `settings` is imported directly. Extra env vars are ignored (backwards-compatible with old .env files).

@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: dotacafe
+    runtime: docker
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: CAFE_NAME
+        value: Dota Cafe

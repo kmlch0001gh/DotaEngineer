@@ -1,69 +1,125 @@
-"""Unit tests for Pydantic models."""
+"""Unit tests for cafe Pydantic models."""
 
 import pytest
-from dotaengineer.models.match import Match, PlayerSlot
+
+from dotaengineer.models.match import CafeMatch, MatchCreate, MatchPlayer, MatchPlayerCreate
+from dotaengineer.models.player import Player, PlayerCreate
+
+# ── Player models ─────────────────────────────────────────────────────────────
 
 
-def make_player(slot: int, hero_id: int = 1, kills: int = 5, deaths: int = 2) -> PlayerSlot:
-    return PlayerSlot(player_slot=slot, hero_id=hero_id, kills=kills, deaths=deaths, assists=3)
+def test_player_create_valid():
+    p = PlayerCreate(username="testuser", display_name="Test")
+    assert p.username == "testuser"
+    assert p.display_name == "Test"
 
 
-def test_player_is_radiant():
-    p = make_player(slot=0)
-    assert p.is_radiant is True
+def test_player_create_invalid_username():
+    with pytest.raises(Exception):
+        PlayerCreate(username="a", display_name="Test")  # too short
 
 
-def test_player_is_dire():
-    p = make_player(slot=128)
-    assert p.is_radiant is False
+def test_player_create_valid_display_name():
+    p = PlayerCreate(username="test_user", display_name="Mi Nombre")
+    assert p.display_name == "Mi Nombre"
 
 
-def test_player_kda():
-    p = make_player(slot=0, kills=5, deaths=2)
-    assert p.kda == pytest.approx((5 + 3) / 2)
-
-
-def test_player_kda_zero_deaths():
-    p = make_player(slot=0, kills=10, deaths=0)
-    assert p.kda == pytest.approx(13.0)  # (10+3)/1
-
-
-def test_match_duration_minutes():
-    m = Match(
-        match_id=1,
-        start_time=0,
-        duration=2400,
-        radiant_win=True,
-        game_mode=22,
-        lobby_type=7,
+def test_player_win_rate():
+    p = Player(
+        id=1,
+        username="test",
+        display_name="Test",
+        mmr=1000,
+        games_played=10,
+        wins=6,
+        losses=4,
+        is_active=True,
+        created_at="2026-01-01T00:00:00",
     )
-    assert m.duration_minutes == pytest.approx(40.0)
+    assert p.win_rate == pytest.approx(0.6)
+    assert p.win_rate_pct == "60.0%"
 
 
-def test_match_get_player_found():
-    p = make_player(slot=0, hero_id=10)
-    p.account_id = 12345
-    m = Match(
-        match_id=1,
-        start_time=0,
-        duration=2400,
-        radiant_win=True,
-        game_mode=22,
-        lobby_type=7,
-        players=[p],
+def test_player_win_rate_zero_games():
+    p = Player(
+        id=1,
+        username="test",
+        display_name="Test",
+        mmr=1000,
+        games_played=0,
+        wins=0,
+        losses=0,
+        is_active=True,
+        created_at="2026-01-01T00:00:00",
     )
-    found = m.get_player(12345)
-    assert found is not None
-    assert found.hero_id == 10
+    assert p.win_rate == 0.0
 
 
-def test_match_get_player_not_found():
-    m = Match(
+# ── Match models ──────────────────────────────────────────────────────────────
+
+
+def test_match_player_kda():
+    mp = MatchPlayer(
+        id=1,
         match_id=1,
-        start_time=0,
-        duration=2400,
-        radiant_win=True,
-        game_mode=22,
-        lobby_type=7,
+        slot=0,
+        hero_id=1,
+        hero_name="Anti-Mage",
+        team="radiant",
+        kills=10,
+        deaths=3,
+        assists=5,
+        won=True,
     )
-    assert m.get_player(99999) is None
+    assert mp.kda == "10/3/5"
+
+
+def test_match_create_minimum():
+    players = [
+        MatchPlayerCreate(slot=i, hero_id=i + 1, team="radiant" if i < 5 else "dire")
+        for i in range(10)
+    ]
+    mc = MatchCreate(radiant_win=True, players=players)
+    assert mc.radiant_win is True
+    assert len(mc.players) == 10
+
+
+def test_cafe_match_properties():
+    players = [
+        MatchPlayer(
+            id=i,
+            match_id=1,
+            slot=i,
+            hero_id=i + 1,
+            hero_name=f"Hero{i}",
+            team="radiant" if i < 5 else "dire",
+            player_id=1 if i == 0 else None,
+            won=True if i < 5 else False,
+        )
+        for i in range(10)
+    ]
+    m = CafeMatch(
+        id=1,
+        played_at="2026-01-01T00:00:00",
+        radiant_win=True,
+        duration_seconds=2535,
+        radiant_score=30,
+        dire_score=20,
+        players=players,
+    )
+    assert m.winner == "Radiant"
+    assert m.duration_display == "42:15"
+    assert len(m.radiant_players) == 5
+    assert len(m.dire_players) == 5
+    assert m.claimed_count == 1
+    assert m.all_claimed is False
+
+
+def test_cafe_match_no_duration():
+    m = CafeMatch(
+        id=1,
+        played_at="2026-01-01T00:00:00",
+        radiant_win=False,
+    )
+    assert m.duration_display == "--:--"
+    assert m.winner == "Dire"

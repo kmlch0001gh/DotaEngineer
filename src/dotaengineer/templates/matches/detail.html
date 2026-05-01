@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}Partida #{{ match.id }} — {{ cafe_name }}{% endblock %}
+
+{% block content %}
+{% set claimed_ids = match.players | selectattr('player_id') | map(attribute='player_id') | list %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Partida #{{ match.id }}</h1>
+        <p class="text-muted text-sm">
+            {{ match.played_at.strftime('%d/%m/%Y %H:%M') }} — {{ match.duration_display }}
+            — {{ match.game_mode }}
+            {% if match.source == 'replay' %}<span class="badge" style="background:var(--info);color:#fff;">Replay</span>{% endif %}
+        </p>
+    </div>
+    {% if is_admin %}
+    <div class="flex gap-2">
+        {% if not match.all_claimed %}
+        <form hx-post="/api/matches/{{ match.id }}/force-elo" hx-swap="none">
+            <button type="submit" class="btn btn-secondary btn-sm"
+                    onclick="return confirm('Calcular ELO con claims parciales?')">
+                Forzar ELO
+            </button>
+        </form>
+        {% endif %}
+        <form hx-post="/api/matches/{{ match.id }}/delete" hx-swap="none">
+            <button type="submit" class="btn btn-danger btn-sm"
+                    onclick="return confirm('Eliminar esta partida? Se recalculará todo el ELO.')">
+                Eliminar
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Score Header -->
+<div class="card scoreboard mb-4" style="padding:0;">
+    <div class="flex">
+        <div class="scoreboard-header scoreboard-radiant" style="flex:1;">
+            <span class="radiant font-bold">RADIANT</span>
+            <span class="font-mono font-bold" style="font-size:1.5rem;">{{ match.radiant_score }}</span>
+        </div>
+        <div style="padding:0.75rem 1.5rem;background:var(--bg-card);display:flex;align-items:center;">
+            <span class="{% if match.radiant_win %}radiant{% else %}dire{% endif %} font-bold">
+                {{ match.winner }} Win
+            </span>
+        </div>
+        <div class="scoreboard-header scoreboard-dire" style="flex:1;text-align:right;">
+            <span class="font-mono font-bold" style="font-size:1.5rem;">{{ match.dire_score }}</span>
+            <span class="dire font-bold">DIRE</span>
+        </div>
+    </div>
+</div>
+
+<!-- Radiant Team -->
+<div class="card radiant-bg mb-2">
+    <div class="card-header radiant">Radiant</div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Hero</th>
+                    <th>Jugador</th>
+                    <th>K/D/A</th>
+                    <th>LH/DN</th>
+                    <th>GPM</th>
+                    <th>NW</th>
+                    <th>DMG</th>
+                    <th>MMR</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in match.radiant_players %}
+                <tr>
+                    <td><div class="hero-cell"><img src="{{ p.hero_id | hero_icon }}" class="hero-icon" alt="{{ p.hero_name }}"><span class="font-bold">{{ p.hero_name }}</span></div></td>
+                    <td id="claim-{{ p.slot }}">
+                        {% if p.player_id %}
+                            <a href="/players/{{ p.player_id }}">{{ p.player_name }}</a>
+                        {% elif is_admin %}
+                            <form hx-post="/api/matches/{{ match.id }}/claim" hx-target="#claim-{{ p.slot }}" hx-swap="innerHTML"
+                                  class="flex gap-1 items-center" style="display:inline-flex;">
+                                <input type="hidden" name="slot" value="{{ p.slot }}">
+                                <select name="player_id" class="form-input claim-select" style="width:auto;padding:0.2rem 0.4rem;font-size:0.75rem;" required>
+                                    <option value="">Reclamar...</option>
+                                    {% for pl in players %}
+                                    {% if pl.id not in claimed_ids %}
+                                    <option value="{{ pl.id }}">{{ pl.display_name }}</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm">OK</button>
+                            </form>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="font-mono">{{ p.kda }}</td>
+                    <td class="font-mono text-muted">{{ p.last_hits }}/{{ p.denies }}</td>
+                    <td class="font-mono">{{ p.gpm }}</td>
+                    <td class="font-mono">{{ '{:,}'.format(p.net_worth) if p.net_worth else '—' }}</td>
+                    <td class="font-mono">{{ '{:,}'.format(p.hero_damage) if p.hero_damage else '—' }}</td>
+                    <td class="font-mono">
+                        {% if p.player_id and p.player_id in mmr_changes %}
+                            {% set change = mmr_changes[p.player_id] %}
+                            <span class="{% if change > 0 %}badge-mmr-up{% else %}badge-mmr-down{% endif %} badge">
+                                {% if change > 0 %}+{% endif %}{{ change }}
+                            </span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Dire Team -->
+<div class="card dire-bg">
+    <div class="card-header dire">Dire</div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Hero</th>
+                    <th>Jugador</th>
+                    <th>K/D/A</th>
+                    <th>LH/DN</th>
+                    <th>GPM</th>
+                    <th>NW</th>
+                    <th>DMG</th>
+                    <th>MMR</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in match.dire_players %}
+                <tr>
+                    <td><div class="hero-cell"><img src="{{ p.hero_id | hero_icon }}" class="hero-icon" alt="{{ p.hero_name }}"><span class="font-bold">{{ p.hero_name }}</span></div></td>
+                    <td>
+                        {% if p.player_id %}
+                            <a href="/players/{{ p.player_id }}">{{ p.player_name }}</a>
+                        {% else %}
+                            <form hx-post="/api/matches/{{ match.id }}/claim" hx-swap="none"
+                                  class="flex gap-1 items-center" style="display:inline-flex;">
+                                <input type="hidden" name="slot" value="{{ p.slot }}">
+                                <select name="player_id" class="form-input" style="width:auto;padding:0.2rem 0.4rem;font-size:0.75rem;" required>
+                                    <option value="">Reclamar...</option>
+                                    {% for pl in players %}
+                                    {% if pl.id not in claimed_ids %}
+                                    <option value="{{ pl.id }}">{{ pl.display_name }}</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm">OK</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                    <td class="font-mono">{{ p.kda }}</td>
+                    <td class="font-mono text-muted">{{ p.last_hits }}/{{ p.denies }}</td>
+                    <td class="font-mono">{{ p.gpm }}</td>
+                    <td class="font-mono">{{ '{:,}'.format(p.net_worth) if p.net_worth else '—' }}</td>
+                    <td class="font-mono">{{ '{:,}'.format(p.hero_damage) if p.hero_damage else '—' }}</td>
+                    <td class="font-mono">
+                        {% if p.player_id and p.player_id in mmr_changes %}
+                            {% set change = mmr_changes[p.player_id] %}
+                            <span class="{% if change > 0 %}badge-mmr-up{% else %}badge-mmr-down{% endif %} badge">
+                                {% if change > 0 %}+{% endif %}{{ change }}
+                            </span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if match.notes %}
+<div class="card mt-4">
+    <div class="card-header">Notas</div>
+    <p class="text-secondary">{{ match.notes }}</p>
+</div>
+{% endif %}
+{% endblock %}

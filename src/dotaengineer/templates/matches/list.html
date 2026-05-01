@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Partidas — {{ cafe_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Partidas</h1>
+</div>
+
+{% if matches %}
+{% for m in matches %}
+<a href="/matches/{{ m.id }}" style="text-decoration:none; color:inherit;">
+    <div class="card" style="padding: 1rem;">
+        <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-3">
+                <span class="{% if m.radiant_win %}radiant{% else %}dire{% endif %} font-bold text-lg">
+                    {{ m.winner }} Win
+                </span>
+                <span class="badge {% if m.radiant_win %}badge-win{% else %}badge-loss{% endif %}">
+                    {{ m.radiant_score }} - {{ m.dire_score }}
+                </span>
+                <span class="text-muted text-sm">{{ m.duration_display }}</span>
+            </div>
+            <div class="text-xs text-muted">
+                {{ m.played_at.strftime('%d/%m/%Y %H:%M') }}
+                {% if m.claimed_count < m.players|length %}
+                <span class="badge" style="background:var(--bg-hover);color:var(--accent);">
+                    {{ m.claimed_count }}/{{ m.players|length }} claimed
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="flex gap-2 flex-wrap">
+            <div class="flex gap-1 items-center">
+                {% for p in m.radiant_players %}
+                <img src="{{ p.hero_id | hero_icon }}" class="hero-icon" alt="{{ p.hero_name }}" title="{{ p.hero_name }}{% if p.player_name %} ({{ p.player_name }}){% endif %}">
+                {% endfor %}
+            </div>
+            <span class="text-muted text-xs flex items-center">vs</span>
+            <div class="flex gap-1 items-center">
+                {% for p in m.dire_players %}
+                <img src="{{ p.hero_id | hero_icon }}" class="hero-icon" alt="{{ p.hero_name }}" title="{{ p.hero_name }}{% if p.player_name %} ({{ p.player_name }}){% endif %}">
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</a>
+{% endfor %}
+
+<!-- Pagination -->
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="/matches?page={{ page - 1 }}" class="btn btn-secondary btn-sm">&lt; Anterior</a>
+    {% endif %}
+    <span class="text-muted text-sm flex items-center">Página {{ page }} de {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a href="/matches?page={{ page + 1 }}" class="btn btn-secondary btn-sm">Siguiente &gt;</a>
+    {% endif %}
+</div>
+
+{% else %}
+<div class="card text-center">
+    <p class="text-muted mb-3">Aún no hay partidas registradas.</p>
+    <a href="/matches/new" class="btn btn-primary">Registrar Primera Partida</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}{{ cafe_name }} — Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">{{ cafe_name }}</h1>
+    {% if is_admin %}
+    <a href="/players/register" class="btn btn-secondary">+ Registrar Jugador</a>
+    {% endif %}
+</div>
+
+<!-- Stats -->
+<div class="grid grid-4 mb-4">
+    <div class="card stat">
+        <div class="stat-value">{{ stats.total_matches }}</div>
+        <div class="stat-label">Partidas</div>
+    </div>
+    <div class="card stat">
+        <div class="stat-value">{{ stats.total_players }}</div>
+        <div class="stat-label">Jugadores</div>
+    </div>
+    <div class="card stat">
+        <div class="stat-value">{{ stats.popular_hero or '—' }}</div>
+        <div class="stat-label">Hero Favorito</div>
+    </div>
+    <div class="card stat">
+        {% if stats.top_player_name %}
+        <div class="stat-value">{{ stats.top_player_mmr }}</div>
+        <div class="stat-label">Top: {{ stats.top_player_name }}</div>
+        {% else %}
+        <div class="stat-value">—</div>
+        <div class="stat-label">Top MMR</div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <!-- Leaderboard Preview -->
+    <div class="card">
+        <div class="flex justify-between items-center mb-3">
+            <div class="card-header" style="margin-bottom:0">Ranking</div>
+            <a href="/leaderboard" class="text-sm">Ver todos</a>
+        </div>
+        {% if leaderboard %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Jugador</th><th>MMR</th><th>WR</th></tr>
+                </thead>
+                <tbody>
+                    {% for p in leaderboard %}
+                    <tr>
+                        <td class="font-bold">{{ p.rank }}</td>
+                        <td><a href="/players/{{ p.id }}">{{ p.display_name }}</a></td>
+                        <td class="font-mono font-bold">{{ p.mmr }}</td>
+                        <td>{{ p.win_rate_pct }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-sm">Aún no hay partidas registradas.</p>
+        {% endif %}
+    </div>
+
+    <!-- Recent Matches -->
+    <div class="card">
+        <div class="flex justify-between items-center mb-3">
+            <div class="card-header" style="margin-bottom:0">Partidas Recientes</div>
+            <a href="/matches" class="text-sm">Ver todas</a>
+        </div>
+        {% if matches %}
+        {% for m in matches %}
+        <a href="/matches/{{ m.id }}" style="text-decoration:none; color:inherit;">
+            <div class="card" style="padding:0.75rem; margin-bottom:0.5rem;">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="{% if m.radiant_win %}radiant{% else %}dire{% endif %} font-bold">
+                            {{ m.winner }} Win
+                        </span>
+                        <span class="text-muted text-xs"> — {{ m.duration_display }}</span>
+                    </div>
+                    <div class="text-xs text-muted">
+                        {{ m.played_at.strftime('%d/%m %H:%M') }}
+                    </div>
+                </div>
+                <div class="flex gap-1 mt-2 items-center">
+                    {% for p in m.radiant_players %}
+                    <img src="{{ p.hero_id | hero_icon }}" class="hero-icon" alt="{{ p.hero_name }}" title="{{ p.hero_name }}">
+                    {% endfor %}
+                    <span class="text-muted text-xs">vs</span>
+                    {% for p in m.dire_players %}
+                    <img src="{{ p.hero_id | hero_icon }}" class="hero-icon" alt="{{ p.hero_name }}" title="{{ p.hero_name }}">
+                    {% endfor %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+        {% else %}
+        <p class="text-muted text-sm">Aún no hay partidas registradas.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

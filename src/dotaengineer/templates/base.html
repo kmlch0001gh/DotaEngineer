@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ cafe_name }}{% endblock %}</title>
+    <script src="/static/htmx.min.js"></script>
+    <style>
+        /* Tailwind-inspired utility classes — minimal offline CSS */
+        :root {
+            --bg-primary: #0f1118;
+            --bg-secondary: #1a1d2e;
+            --bg-card: #222640;
+            --bg-hover: #2a2e4a;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #f59e0b;
+            --radiant: #4ade80;
+            --dire: #f87171;
+            --radiant-bg: #052e1633;
+            --dire-bg: #2e050533;
+            --border: #334155;
+            --success: #22c55e;
+            --error: #ef4444;
+            --info: #3b82f6;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* Layout */
+        .app { display: flex; flex-direction: column; min-height: 100vh; }
+        .main { flex: 1; padding: 1rem; max-width: 1200px; margin: 0 auto; width: 100%; }
+
+        /* Nav */
+        .nav {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            overflow-x: auto;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .nav-brand {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+        .nav-links { display: flex; gap: 0.25rem; }
+        .nav-link {
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+        .nav-link:hover { background: var(--bg-hover); color: var(--text-primary); text-decoration: none; }
+        .nav-link.active { background: var(--bg-card); color: var(--accent); }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .card-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        /* Grid */
+        .grid { display: grid; gap: 1rem; }
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+        @media (max-width: 768px) {
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+        }
+
+        /* Stat cards */
+        .stat { text-align: center; }
+        .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--accent); }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Tables */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        th {
+            text-align: left;
+            padding: 0.625rem 0.75rem;
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+        }
+        td {
+            padding: 0.625rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        tr:hover td { background: var(--bg-hover); }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: #d97706; color: #000; text-decoration: none; }
+        .btn-secondary { background: var(--bg-hover); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: var(--bg-card); }
+        .btn-danger { background: var(--error); color: #fff; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-sm { padding: 0.25rem 0.625rem; font-size: 0.75rem; }
+        .btn-radiant { background: var(--radiant); color: #000; }
+        .btn-dire { background: var(--dire); color: #000; }
+
+        /* Forms */
+        .form-group { margin-bottom: 1rem; }
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.375rem;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+        .form-input:focus { outline: none; border-color: var(--accent); }
+        .form-input::placeholder { color: var(--text-muted); }
+        select.form-input { appearance: auto; }
+
+        /* Hero icons */
+        .hero-icon {
+            height: 24px;
+            width: auto;
+            border-radius: 2px;
+            vertical-align: middle;
+        }
+        .hero-icon-lg {
+            height: 36px;
+            width: auto;
+            border-radius: 3px;
+            vertical-align: middle;
+        }
+        .hero-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        /* Team colors */
+        .radiant { color: var(--radiant); }
+        .dire { color: var(--dire); }
+        .radiant-bg { background: var(--radiant-bg); }
+        .dire-bg { background: var(--dire-bg); }
+        .win { color: var(--success); }
+        .loss { color: var(--error); }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-win { background: #052e16; color: var(--radiant); }
+        .badge-loss { background: #2e0505; color: var(--dire); }
+        .badge-mmr-up { background: #052e16; color: var(--success); }
+        .badge-mmr-down { background: #2e0505; color: var(--error); }
+
+        /* MMR tiers (like Dota ranks) */
+        .mmr-herald { color: #a0a0a0; }
+        .mmr-guardian { color: #b0c4de; }
+        .mmr-crusader { color: #ffd700; }
+        .mmr-archon { color: #f0e68c; }
+        .mmr-legend { color: #87ceeb; }
+        .mmr-ancient { color: #9370db; }
+        .mmr-divine { color: #ff6347; }
+        .mmr-immortal { color: #ff4500; }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 100;
+        }
+        .toast {
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            animation: slideIn 0.3s ease;
+        }
+        .toast-success { background: #052e16; border: 1px solid var(--success); color: var(--success); }
+        .toast-error { background: #2e0505; border: 1px solid var(--error); color: var(--error); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Scoreboard */
+        .scoreboard { border-radius: 0.75rem; overflow: hidden; }
+        .scoreboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .scoreboard-radiant { background: linear-gradient(135deg, #052e1666, var(--bg-card)); }
+        .scoreboard-dire { background: linear-gradient(135deg, #2e050566, var(--bg-card)); }
+
+        /* Page header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .page-title { font-size: 1.5rem; font-weight: 700; }
+
+        /* Streak indicator */
+        .streak-positive { color: var(--success); }
+        .streak-negative { color: var(--error); }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        /* Hero picker */
+        .hero-picker-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 0 0 0.5rem 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 20;
+        }
+        .hero-option {
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .hero-option:hover { background: var(--bg-hover); }
+
+        /* Flex utilities */
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .flex-wrap { flex-wrap: wrap; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .gap-1 { gap: 0.25rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+
+        /* Spacing */
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-3 { margin-bottom: 0.75rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-4 { margin-top: 1rem; }
+        .p-2 { padding: 0.5rem; }
+        .p-3 { padding: 0.75rem; }
+
+        /* Text */
+        .text-sm { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-muted { color: var(--text-muted); }
+        .text-secondary { color: var(--text-secondary); }
+        .text-center { text-align: center; }
+        .font-bold { font-weight: 700; }
+        .font-mono { font-family: 'SF Mono', 'Fira Code', monospace; }
+
+        /* Width */
+        .w-full { width: 100%; }
+
+        /* Mobile bottom nav */
+        @media (max-width: 640px) {
+            .nav { flex-wrap: wrap; }
+            .main { padding: 0.75rem; }
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="app">
+        <nav class="nav">
+            <a href="/" class="nav-brand">{{ cafe_name }}</a>
+            <div class="nav-links">
+                <a href="/" class="nav-link {% if request.url.path == '/' %}active{% endif %}">Inicio</a>
+                <a href="/matches" class="nav-link {% if '/matches' in request.url.path %}active{% endif %}">Partidas</a>
+                <a href="/players" class="nav-link {% if '/players' in request.url.path and '/register' not in request.url.path %}active{% endif %}">Jugadores</a>
+                <a href="/leaderboard" class="nav-link {% if '/leaderboard' in request.url.path %}active{% endif %}">Ranking</a>
+                <a href="/balance" class="nav-link {% if '/balance' in request.url.path %}active{% endif %}">Balance</a>
+                {% if is_admin %}
+                <a href="/logout" class="nav-link" style="color:var(--error);">Salir Admin</a>
+                {% endif %}
+            </div>
+        </nav>
+
+        <main class="main">
+            {% block content %}{% endblock %}
+        </main>
+
+        <div id="toast-container" class="toast-container" hx-swap-oob="true"></div>
+    </div>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

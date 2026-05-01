@@ -1,149 +1,303 @@
 """CLI entry point — dotaengineer <command>.
 
 Usage:
-  dotaengineer ingest meta          # run meta ingestion pipeline
-  dotaengineer ingest player        # run personal match history pipeline
-  dotaengineer analyze counters     # print counter-picks for enemy heroes
-  dotaengineer analyze performance  # print personal performance report
-  dotaengineer serve api            # start FastAPI server
-  dotaengineer serve dashboard      # start Streamlit dashboard
+  dotaengineer serve                  # start web server on :8000
+  dotaengineer init-db                # create database schema
+  dotaengineer add-player USERNAME    # quick player registration
+  dotaengineer recalc-elo             # recalculate all ELO from scratch
+  dotaengineer backup                 # backup database file
+  dotaengineer fetch-heroes           # download hero data (needs internet)
+  dotaengineer setup-parser           # build Java replay parser (needs Java + Maven)
+  dotaengineer watch --dir PATH       # watch for new .dem replays
+  dotaengineer parse FILE.dem         # parse a single replay file
 """
 
 from __future__ import annotations
 
-import asyncio
+import shutil
 import subprocess
+from datetime import datetime
+from pathlib import Path
 
 import typer
 from rich.console import Console
-from rich.table import Table
 
-app = typer.Typer(name="dotaengineer", help="High-MMR Dota 2 data platform.")
-ingest = typer.Typer(help="Data ingestion pipelines.")
-analyze = typer.Typer(help="Analysis commands.")
-serve = typer.Typer(help="Start servers.")
-
-app.add_typer(ingest, name="ingest")
-app.add_typer(analyze, name="analyze")
-app.add_typer(serve, name="serve")
-
+app = typer.Typer(name="dotaengineer", help="Dota 2 cybercafe stats tracker.")
 console = Console()
 
 
-@ingest.command("meta")
-def ingest_meta():
-    """Ingest high-MMR hero meta from OpenDota and Stratz."""
-    from dotaengineer.pipelines.meta_pipeline import meta_ingestion_flow
-
-    console.print("[bold green]Starting meta ingestion pipeline...[/]")
-    asyncio.run(meta_ingestion_flow())
-    console.print("[bold green]Done.[/]")
-
-
-@ingest.command("player")
-def ingest_player(
-    account_id: int = typer.Option(0, help="Steam account ID (32-bit). Uses MY_STEAM_ID if not set."),
-    limit: int = typer.Option(200, help="Number of recent matches to fetch."),
+@app.command()
+def serve(
+    host: str = typer.Option("0.0.0.0", help="Bind host"),
+    port: int = typer.Option(8000, help="Bind port"),
+    reload: bool = typer.Option(False, help="Enable auto-reload"),
 ):
-    """Ingest personal match history."""
-    from dotaengineer.pipelines.player_pipeline import player_ingestion_flow
-
-    console.print(f"[bold green]Starting player ingestion (last {limit} matches)...[/]")
-    asyncio.run(player_ingestion_flow(account_id=account_id or None, limit=limit))
-    console.print("[bold green]Done.[/]")
-
-
-@analyze.command("counters")
-def analyze_counters(
-    enemies: str = typer.Argument(..., help="Comma-separated enemy hero IDs, e.g. '1,2,3'"),
-    allies: str = typer.Option("", help="Comma-separated allied hero IDs"),
-    pool: str = typer.Option("", help="Comma-separated hero pool IDs to restrict picks"),
-    top: int = typer.Option(10, help="Number of results"),
-):
-    """Get best picks vs an enemy lineup."""
-    from dotaengineer.analysis.draft import DraftAnalyzer
-
-    enemy_ids = [int(x.strip()) for x in enemies.split(",") if x.strip()]
-    ally_ids = [int(x.strip()) for x in allies.split(",") if x.strip()]
-    pool_ids = [int(x.strip()) for x in pool.split(",") if x.strip()] or None
-
-    analyzer = DraftAnalyzer()
-    df = analyzer.get_best_pick(ally_ids, enemy_ids, pool=pool_ids, top_n=top)
-
-    table = Table(title="Best Picks vs Enemy Draft")
-    for col in df.columns:
-        table.add_column(col)
-    for row in df.iter_rows():
-        table.add_row(*[str(v) for v in row])
-
-    console.print(table)
-
-
-@analyze.command("performance")
-def analyze_performance(
-    account_id: int = typer.Option(0, help="Steam account ID. Uses MY_STEAM_ID if not set."),
-):
-    """Print personal performance report."""
-    from dotaengineer.analysis.player_performance import PlayerPerformanceAnalyzer
-
-    analyzer = PlayerPerformanceAnalyzer(account_id or None)
-
-    console.print("\n[bold]Hero Pool — Worst Heroes vs Meta:[/]")
-    worst = analyzer.worst_heroes()
-    t = Table()
-    for col in worst.columns:
-        t.add_column(col)
-    for row in worst.iter_rows():
-        t.add_row(*[str(v) for v in row])
-    console.print(t)
-
-    console.print("\n[bold]Duration Split Win Rates:[/]")
-    splits = analyzer.win_loss_by_duration()
-    t2 = Table()
-    for col in splits.columns:
-        t2.add_column(col)
-    for row in splits.iter_rows():
-        t2.add_row(*[str(v) for v in row])
-    console.print(t2)
-
-
-@analyze.command("meta")
-def analyze_meta():
-    """Print current meta tier list at immortal bracket."""
-    from dotaengineer.analysis.meta import MetaAnalyzer
-
-    analyzer = MetaAnalyzer()
-    df = analyzer.tier_list()
-
-    table = Table(title="Immortal Meta Tier List")
-    for col in df.columns:
-        table.add_column(col)
-    for row in df.iter_rows():
-        table.add_row(*[str(v) for v in row])
-    console.print(table)
-
-
-@serve.command("api")
-def serve_api(
-    host: str = typer.Option("0.0.0.0"),
-    port: int = typer.Option(8000),
-    reload: bool = typer.Option(False),
-):
-    """Start the FastAPI server."""
+    """Start the web server."""
     import uvicorn
 
+    console.print(f"[bold green]Starting {host}:{port}...[/]")
     uvicorn.run(
-        "dotaengineer.api.routes:app",
+        "dotaengineer.api.app:app",
         host=host,
         port=port,
         reload=reload,
     )
 
 
-@serve.command("dashboard")
-def serve_dashboard():
-    """Start the Streamlit dashboard."""
-    subprocess.run(
-        ["streamlit", "run", "src/dotaengineer/dashboard/app.py"],
-        check=True,
+@app.command("init-db")
+def init_db():
+    """Initialize the database schema."""
+    from dotaengineer.db import init_schema
+
+    init_schema()
+    console.print("[bold green]Database schema initialized.[/]")
+
+
+@app.command("add-player")
+def add_player(
+    username: str = typer.Argument(..., help="Player username"),
+    display_name: str = typer.Option("", help="Display name (defaults to username)"),
+    pin: str = typer.Option("", help="4-digit PIN"),
+):
+    """Quick player registration from the CLI."""
+    from dotaengineer.db import get_connection
+    from dotaengineer.models.player import PlayerCreate
+    from dotaengineer.services.player_service import create_player
+
+    display = display_name or username
+    data = PlayerCreate(
+        username=username,
+        display_name=display,
+        pin=pin if pin else None,
     )
+    con = get_connection()
+    try:
+        player_id = create_player(data, con)
+        console.print(f"[bold green]Player '{display}' created (ID {player_id}).[/]")
+    finally:
+        con.close()
+
+
+@app.command("recalc-elo")
+def recalc_elo():
+    """Recalculate all ELO ratings from match history."""
+    from dotaengineer.db import get_connection
+    from dotaengineer.elo import recalculate_all
+
+    con = get_connection()
+    try:
+        count = recalculate_all(con)
+        console.print(f"[bold green]ELO recalculated: {count} matches processed.[/]")
+    finally:
+        con.close()
+
+
+@app.command()
+def backup():
+    """Backup the database to a timestamped file."""
+    from dotaengineer.config import settings
+
+    src = Path(settings.duckdb_path)
+    if not src.exists():
+        console.print("[bold red]Database file not found.[/]")
+        raise typer.Exit(1)
+
+    backup_dir = src.parent / "backups"
+    backup_dir.mkdir(exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    dst = backup_dir / f"cafe_{timestamp}.duckdb"
+    shutil.copy2(src, dst)
+    console.print(f"[bold green]Backup saved: {dst}[/]")
+
+
+@app.command("fetch-heroes")
+def fetch_heroes():
+    """Download hero data from OpenDota API (requires internet)."""
+    import asyncio
+    import json
+
+    import httpx
+
+    from dotaengineer.config import settings
+
+    async def _fetch():
+        async with httpx.AsyncClient() as client:
+            resp = await client.get("https://api.opendota.com/api/heroes")
+            resp.raise_for_status()
+            return resp.json()
+
+    console.print("[bold]Fetching hero data from OpenDota...[/]")
+    heroes_raw = asyncio.run(_fetch())
+
+    heroes = []
+    for h in heroes_raw:
+        name = h["name"].replace("npc_dota_hero_", "")
+        heroes.append(
+            {
+                "id": h["id"],
+                "name": h["name"],
+                "localized_name": h["localized_name"],
+                "primary_attr": h.get("primary_attr", "all"),
+                "attack_type": h.get("attack_type", "Melee"),
+                "roles": h.get("roles", []),
+                "img": f"/static/hero_icons/{name}.png",
+            }
+        )
+
+    heroes.sort(key=lambda x: x["id"])
+    path = settings.heroes_json_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(heroes, indent=2, ensure_ascii=False), encoding="utf-8")
+    console.print(f"[bold green]{len(heroes)} heroes saved to {path}[/]")
+
+
+# ── Replay commands ──────────────────────────────────────────────────────────
+
+
+@app.command("setup-parser")
+def setup_parser():
+    """Build the Java replay parser (requires Java 17+ and Maven).
+
+    This compiles the clarity-based parser that extracts full match stats
+    (KDA, GPM, damage, items) from .dem replay files.
+
+    One-time setup — after this, `dotaengineer parse` and `dotaengineer watch`
+    will automatically use the Java parser for complete data.
+    """
+    tools_dir = Path("tools/replay-parser")
+    pom = tools_dir / "pom.xml"
+
+    if not pom.exists():
+        console.print("[bold red]tools/replay-parser/pom.xml not found.[/]")
+        console.print("Make sure you're in the project root directory.")
+        raise typer.Exit(1)
+
+    # Check prerequisites
+    if not shutil.which("java"):
+        console.print("[bold red]Java not found.[/]")
+        console.print("Install Java 17+: https://adoptium.net/")
+        raise typer.Exit(1)
+
+    if not shutil.which("mvn"):
+        console.print("[bold red]Maven not found.[/]")
+        console.print("Install Maven: https://maven.apache.org/install.html")
+        raise typer.Exit(1)
+
+    console.print("[bold]Building replay parser with Maven...[/]")
+    console.print("(first build downloads dependencies, may take a minute)")
+
+    result = subprocess.run(
+        ["mvn", "package", "-q", "-DskipTests"],
+        cwd=str(tools_dir),
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode != 0:
+        console.print(f"[bold red]Build failed:[/]\n{result.stderr[:1000]}")
+        raise typer.Exit(1)
+
+    jar_src = tools_dir / "target" / "dotacafe-parser.jar"
+    if not jar_src.exists():
+        console.print("[bold red]JAR not found after build.[/]")
+        raise typer.Exit(1)
+
+    # Copy JAR to data/ for easy access
+    jar_dst = Path("data") / "dotacafe-parser.jar"
+    jar_dst.parent.mkdir(exist_ok=True)
+    shutil.copy2(jar_src, jar_dst)
+
+    console.print(f"[bold green]Parser built: {jar_dst}[/]")
+    console.print("Replay parsing will now include full stats (KDA, GPM, damage).")
+
+
+@app.command("parse")
+def parse_replay_cmd(
+    replay_file: str = typer.Argument(..., help="Path to .dem replay file"),
+):
+    """Parse a single .dem replay and create a match in the database."""
+    from rich.table import Table
+
+    from dotaengineer.db import get_connection
+    from dotaengineer.replay.parser import parse_replay
+    from dotaengineer.services.match_service import create_match
+
+    path = Path(replay_file)
+    if not path.exists():
+        console.print(f"[bold red]File not found: {path}[/]")
+        raise typer.Exit(1)
+
+    console.print(f"[bold]Parsing {path.name}...[/]")
+    match_data = parse_replay(path)
+
+    if match_data is None:
+        console.print("[bold red]Could not parse replay.[/]")
+        raise typer.Exit(1)
+
+    # Show parsed data
+    console.print(
+        f"  Winner: [{'green' if match_data.radiant_win else 'red'}]"
+        f"{'Radiant' if match_data.radiant_win else 'Dire'}[/]"
+    )
+    if match_data.duration_seconds:
+        m, s = divmod(match_data.duration_seconds, 60)
+        console.print(f"  Duration: {m}:{s:02d}")
+    console.print(f"  Players: {len(match_data.players)}")
+    console.print(f"  Source: {match_data.source}")
+
+    table = Table(title="Players")
+    table.add_column("Slot")
+    table.add_column("Team")
+    table.add_column("Hero ID")
+    table.add_column("K/D/A")
+    table.add_column("GPM")
+    for p in match_data.players:
+        kda = f"{p.kills}/{p.deaths}/{p.assists}"
+        has_stats = p.kills > 0 or p.deaths > 0 or p.assists > 0
+        table.add_row(
+            str(p.slot),
+            p.team,
+            str(p.hero_id),
+            kda if has_stats else "[dim]—[/]",
+            str(p.gpm) if p.gpm > 0 else "[dim]—[/]",
+        )
+    console.print(table)
+
+    # Save to database
+    con = get_connection()
+    try:
+        match_id = create_match(match_data, con)
+        console.print(f"[bold green]Match #{match_id} created from replay.[/]")
+    finally:
+        con.close()
+
+
+@app.command("watch")
+def watch_replays(
+    dir: str = typer.Option("", help="Replay directory to watch"),
+):
+    """Watch a directory for new .dem replays and auto-create matches.
+
+    If --dir is not provided, uses REPLAY_WATCH_DIR from .env config.
+    """
+    from dotaengineer.replay.watcher import start_watcher, stop_watcher
+
+    watch_dir = dir or None
+    observer = start_watcher(watch_dir=watch_dir)
+
+    if observer is None:
+        console.print("[bold red]Watcher not started.[/]")
+        console.print("Set REPLAY_WATCH_DIR in .env or use --dir")
+        raise typer.Exit(1)
+
+    console.print("[bold green]Watching for new .dem replays...[/]")
+    console.print("Press Ctrl+C to stop.")
+
+    try:
+        import time
+
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        stop_watcher(observer)
+        console.print("\n[bold]Watcher stopped.[/]")

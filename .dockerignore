@@ -1,0 +1,12 @@
+.git
+.env
+data/
+tools/
+notebooks/
+tests/
+*.duckdb
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.mypy_cache

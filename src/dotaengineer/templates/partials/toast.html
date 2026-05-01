@@ -1,0 +1,6 @@
+<div id="toast-container" hx-swap-oob="innerHTML:#toast-container">
+    <div class="toast toast-{{ type }}" onclick="this.remove()">
+        {{ message }}
+    </div>
+    <script>setTimeout(() => { const t = document.querySelector('.toast'); if(t) t.remove(); }, 4000);</script>
+</div>

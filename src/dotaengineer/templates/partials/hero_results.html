@@ -1,0 +1,9 @@
+{% for h in heroes %}
+<div class="hero-option" onclick="selectHero({{ h.id }}, '{{ h.localized_name }}')">
+    <span>{{ h.localized_name }}</span>
+    <span class="text-muted text-xs">{{ h.roles[:2]|join(', ') }}</span>
+</div>
+{% endfor %}
+{% if not heroes %}
+<div class="hero-option text-muted">No se encontraron héroes</div>
+{% endif %}

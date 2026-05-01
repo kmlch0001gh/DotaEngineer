@@ -1,0 +1,3 @@
+{% for p in players %}
+<option value="{{ p.id }}">{{ p.display_name }} (MMR: {{ p.mmr }})</option>
+{% endfor %}

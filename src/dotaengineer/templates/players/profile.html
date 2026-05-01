@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}{{ stats.player.display_name }} — {{ cafe_name }}{% endblock %}
+
+{% block content %}
+{% set p = stats.player %}
+
+<!-- Player Header -->
+<div class="card mb-4">
+    <div class="flex justify-between items-center flex-wrap gap-3">
+        <div>
+            <div class="flex items-center gap-2">
+                <h1 class="page-title" id="player-name-display">{{ p.display_name }}</h1>
+                {% if is_admin %}<button class="btn btn-secondary btn-sm" onclick="document.getElementById('edit-form').style.display='block'; this.style.display='none';">Editar</button>{% endif %}
+            </div>
+            <p class="text-muted text-sm">@{{ p.username }} — Desde {{ p.created_at.strftime('%d/%m/%Y') }}</p>
+            <!-- Edit form (hidden by default) -->
+            <form id="edit-form" hx-post="/api/players/{{ p.id }}/edit" hx-swap="none"
+                  style="display:none; margin-top:0.5rem;" class="flex gap-2 items-end flex-wrap">
+                <div>
+                    <label class="form-label">Nombre</label>
+                    <input type="text" name="display_name" value="{{ p.display_name }}" class="form-input" required maxlength="30" style="width:180px;">
+                </div>
+                <div>
+                    <label class="form-label">Username</label>
+                    <input type="text" name="username" value="{{ p.username }}" class="form-input" required minlength="2" maxlength="20" pattern="[a-zA-Z0-9_]+" style="width:150px;">
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('edit-form').style.display='none';">Cancelar</button>
+            </form>
+        </div>
+        <div class="flex gap-4 items-center">
+            <div class="stat">
+                <div class="stat-value">{{ p.mmr }}</div>
+                <div class="stat-label">MMR</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" style="color:var(--text-primary);">{{ p.games_played }}</div>
+                <div class="stat-label">Partidas</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value {% if p.win_rate >= 0.5 %}win{% else %}loss{% endif %}">{{ p.win_rate_pct }}</div>
+                <div class="stat-label">Win Rate</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-4 mb-4">
+    <div class="card stat">
+        <div class="stat-value" style="font-size:1.25rem;">{{ stats.avg_kills }}/{{ stats.avg_deaths }}/{{ stats.avg_assists }}</div>
+        <div class="stat-label">KDA Promedio</div>
+    </div>
+    <div class="card stat">
+        <div class="stat-value" style="font-size:1.25rem;">{{ stats.avg_gpm|int }}</div>
+        <div class="stat-label">GPM Promedio</div>
+    </div>
+    <div class="card stat">
+        <div class="stat-value {% if stats.current_streak > 0 %}streak-positive{% elif stats.current_streak < 0 %}streak-negative{% endif %}" style="font-size:1.25rem;">
+            {% if stats.current_streak > 0 %}+{{ stats.current_streak }}W
+            {% elif stats.current_streak < 0 %}{{ stats.current_streak|abs }}L
+            {% else %}—{% endif %}
+        </div>
+        <div class="stat-label">Racha Actual</div>
+    </div>
+    <div class="card stat">
+        <div class="stat-value" style="font-size:1.25rem;color:var(--success);">{{ stats.best_win_streak }}W</div>
+        <div class="stat-label">Mejor Racha</div>
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <!-- Hero Breakdown -->
+    <div class="card">
+        <div class="card-header">Héroes</div>
+        {% if stats.hero_breakdown %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Héroe</th><th>Games</th><th>WR</th><th>KDA</th><th>GPM</th></tr>
+                </thead>
+                <tbody>
+                    {% for h in stats.hero_breakdown %}
+                    <tr>
+                        <td><div class="hero-cell"><img src="{{ h.hero_id | hero_icon }}" class="hero-icon" alt="{{ h.hero_name }}"><span class="font-bold">{{ h.hero_name }}{% if h.hero_name == stats.favorite_hero %} ★{% endif %}</span></div></td>
+                        <td>{{ h.games }}</td>
+                        <td class="{% if h.win_rate >= 0.5 %}win{% else %}loss{% endif %}">{{ h.win_rate_pct }}</td>
+                        <td class="font-mono">{{ h.avg_kills }}/{{ h.avg_deaths }}/{{ h.avg_assists }}</td>
+                        <td class="font-mono">{{ h.avg_gpm|int }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-sm">Sin datos de héroes aún.</p>
+        {% endif %}
+    </div>
+
+    <!-- Recent Matches -->
+    <div class="card">
+        <div class="card-header">Partidas Recientes</div>
+        {% if recent_matches %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Héroe</th><th>Resultado</th><th>K/D/A</th><th>Fecha</th></tr>
+                </thead>
+                <tbody>
+                    {% for m in recent_matches %}
+                    <tr>
+                        <td>
+                            <a href="/matches/{{ m.match_id }}" class="hero-cell"><img src="{{ m.hero_id | hero_icon }}" class="hero-icon" alt="{{ m.hero_name }}">{{ m.hero_name }}</a>
+                        </td>
+                        <td>
+                            <span class="badge {% if m.won %}badge-win{% else %}badge-loss{% endif %}">
+                                {% if m.won %}WIN{% else %}LOSS{% endif %}
+                            </span>
+                        </td>
+                        <td class="font-mono">{{ m.kills }}/{{ m.deaths }}/{{ m.assists }}</td>
+                        <td class="text-muted text-xs">{{ m.played_at.strftime('%d/%m %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-sm">Sin partidas registradas aún.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- MMR History Chart -->
+{% if mmr_history %}
+<div class="card mt-4">
+    <div class="card-header">Historial de MMR</div>
+    <div style="display:flex;align-items:flex-end;gap:2px;height:120px;padding:0.5rem 0;">
+        {% set mmr_values = mmr_history | map(attribute='mmr_after') | list %}
+        {% set mmr_min = mmr_values | min - 20 %}
+        {% set mmr_max = mmr_values | max + 20 %}
+        {% set mmr_range = mmr_max - mmr_min if mmr_max != mmr_min else 1 %}
+        {% for h in mmr_history %}
+        {% set height = ((h.mmr_after - mmr_min) / mmr_range * 100) %}
+        <div style="flex:1;min-width:4px;max-width:20px;height:{{ height }}%;background:{% if h.mmr_change >= 0 %}var(--success){% else %}var(--error){% endif %};border-radius:2px 2px 0 0;"
+             title="Match #{{ h.match_id }}: {{ h.mmr_after }} ({% if h.mmr_change >= 0 %}+{% endif %}{{ h.mmr_change }})">
+        </div>
+        {% endfor %}
+    </div>
+    <div class="flex justify-between text-xs text-muted">
+        <span>{{ mmr_min + 20 }}</span>
+        <span>{{ mmr_max - 20 }}</span>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

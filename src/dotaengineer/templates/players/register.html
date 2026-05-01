@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Registrar Jugador — {{ cafe_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Registrar Jugador</h1>
+</div>
+
+<div class="card" style="max-width: 500px;">
+    <form hx-post="/api/players" hx-swap="none">
+        <div class="form-group">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" class="form-input" required
+                   minlength="2" maxlength="20" pattern="[a-zA-Z0-9_]+"
+                   placeholder="e.g. shadow_fiend_god">
+            <small class="text-muted">2-20 caracteres, solo letras, números y _</small>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Nombre para mostrar</label>
+            <input type="text" name="display_name" class="form-input" required
+                   maxlength="30" placeholder="e.g. Carlos">
+        </div>
+        <button type="submit" class="btn btn-primary">Registrar</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+<div class="grid grid-2 mb-4">
+    <!-- Team A (Radiant) -->
+    <div class="card radiant-bg">
+        <div class="card-header">
+            <span class="radiant">Team Radiant</span>
+            <span class="text-muted text-sm"> — Avg MMR: {{ result.team_a.avg_mmr }}</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Jugador</th><th>MMR</th></tr></thead>
+                <tbody>
+                    {% for p in result.team_a.players %}
+                    <tr>
+                        <td class="font-bold">{{ p.display_name }}</td>
+                        <td class="font-mono">{{ p.mmr }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="border-top:2px solid var(--border);">
+                        <td class="font-bold">Total</td>
+                        <td class="font-mono font-bold">{{ result.team_a.total_mmr }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="text-center mt-2">
+            <span class="text-sm text-muted">Win Probability: </span>
+            <span class="font-bold radiant">{{ result.predicted_win_a }}%</span>
+        </div>
+    </div>
+
+    <!-- Team B (Dire) -->
+    <div class="card dire-bg">
+        <div class="card-header">
+            <span class="dire">Team Dire</span>
+            <span class="text-muted text-sm"> — Avg MMR: {{ result.team_b.avg_mmr }}</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Jugador</th><th>MMR</th></tr></thead>
+                <tbody>
+                    {% for p in result.team_b.players %}
+                    <tr>
+                        <td class="font-bold">{{ p.display_name }}</td>
+                        <td class="font-mono">{{ p.mmr }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr style="border-top:2px solid var(--border);">
+                        <td class="font-bold">Total</td>
+                        <td class="font-mono font-bold">{{ result.team_b.total_mmr }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="text-center mt-2">
+            <span class="text-sm text-muted">Win Probability: </span>
+            <span class="font-bold dire">{{ result.predicted_win_b }}%</span>
+        </div>
+    </div>
+</div>
+
+<div class="card text-center">
+    <div class="text-sm text-muted">Diferencia de MMR:</div>
+    <div class="font-mono font-bold text-lg" style="color:{% if result.mmr_difference < 50 %}var(--success){% elif result.mmr_difference < 150 %}var(--accent){% else %}var(--error){% endif %}">
+        {{ result.mmr_difference }} pts
+    </div>
+    <div class="text-xs text-muted mt-1">
+        {% if result.mmr_difference < 50 %}Excelente balance{% elif result.mmr_difference < 150 %}Buen balance{% else %}Balance aceptable{% endif %}
+    </div>
+</div>

@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}Nueva Partida — {{ cafe_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Registrar Partida</h1>
+</div>
+
+<form id="match-form" hx-post="/api/matches" hx-swap="none" hx-encoding="multipart/form-data">
+    <!-- Match Info -->
+    <div class="card mb-4">
+        <div class="card-header">Detalles de la Partida</div>
+        <div class="grid grid-3">
+            <div class="form-group">
+                <label class="form-label">Ganador</label>
+                <div class="flex gap-2">
+                    <label style="cursor:pointer;" class="flex items-center gap-1">
+                        <input type="radio" name="radiant_win" value="true" checked> <span class="radiant font-bold">Radiant</span>
+                    </label>
+                    <label style="cursor:pointer;" class="flex items-center gap-1">
+                        <input type="radio" name="radiant_win" value="false"> <span class="dire font-bold">Dire</span>
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Duración</label>
+                <div class="flex gap-1 items-center">
+                    <input type="number" name="duration_minutes" class="form-input" placeholder="Min" min="0" max="180" style="width:70px;">
+                    <span class="text-muted">:</span>
+                    <input type="number" name="duration_seconds_part" class="form-input" placeholder="Seg" min="0" max="59" style="width:70px;">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Score (Kills)</label>
+                <div class="flex gap-1 items-center">
+                    <input type="number" name="radiant_score" class="form-input" value="0" min="0" style="width:60px;">
+                    <span class="text-muted">-</span>
+                    <input type="number" name="dire_score" class="form-input" value="0" min="0" style="width:60px;">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Notas (opcional)</label>
+            <input type="text" name="notes" class="form-input" placeholder="e.g. Torneo semifinal, comeback épico...">
+        </div>
+    </div>
+
+    <!-- Hidden field for player data JSON -->
+    <input type="hidden" name="match_data" id="match-data">
+
+    <!-- Hero Slots -->
+    <div class="grid grid-2">
+        <!-- Radiant -->
+        <div class="card radiant-bg">
+            <div class="card-header radiant">Radiant (Slots 0-4)</div>
+            {% for i in range(5) %}
+            <div class="mb-3 p-2" style="background:var(--bg-secondary);border-radius:0.5rem;">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-xs text-muted font-bold" style="width:20px;">{{ i+1 }}</span>
+                    <div style="position:relative;flex:1;">
+                        <input type="text"
+                               class="form-input hero-search"
+                               data-slot="{{ i }}"
+                               placeholder="Buscar héroe..."
+                               autocomplete="off"
+                               oninput="searchHero(this, {{ i }})">
+                        <input type="hidden" class="hero-id-input" data-slot="{{ i }}">
+                        <div class="hero-picker-results" id="hero-results-{{ i }}" style="display:none;"></div>
+                    </div>
+                </div>
+                <div class="flex gap-1" id="stats-{{ i }}">
+                    <input type="number" class="form-input stat-input" data-slot="{{ i }}" data-field="kills" placeholder="K" min="0" style="width:45px;padding:0.2rem;">
+                    <input type="number" class="form-input stat-input" data-slot="{{ i }}" data-field="deaths" placeholder="D" min="0" style="width:45px;padding:0.2rem;">
+                    <input type="number" class="form-input stat-input" data-slot="{{ i }}" data-field="assists" placeholder="A" min="0" style="width:45px;padding:0.2rem;">
+                    <input type="number" class="form-input stat-input" data-slot="{{ i }}" data-field="gpm" placeholder="GPM" min="0" style="width:55px;padding:0.2rem;">
+                    <input type="number" class="form-input stat-input" data-slot="{{ i }}" data-field="last_hits" placeholder="LH" min="0" style="width:50px;padding:0.2rem;">
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Dire -->
+        <div class="card dire-bg">
+            <div class="card-header dire">Dire (Slots 5-9)</div>
+            {% for i in range(5, 10) %}
+            <div class="mb-3 p-2" style="background:var(--bg-secondary);border-radius:0.5rem;">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-xs text-muted font-bold" style="width:20px;">{{ i-4 }}</span>
+                    <div style="position:relative;flex:1;">
+                        <input type="text"
+                               class="form-input hero-search"
+                               data-slot="{{ i }}"
+                               placeholder="Buscar héroe..."
+                               autocomplete="off"
+                               oninput="searchHero(this, {{ i }})">
+                        <input type="hidden" class="hero-id-input" data-slot="{{ i }}">
+                        <div class="hero-picker-results" id="hero-results-{{ i }}" style="display:none;"></div>
+                    </div>
+                </div>
+                <div class="flex gap-1" id="stats-{{ i }}">
+                    <input type="number" class="form-input stat-input" data-slot="{{ i }}" data-field="kills" placeholder="K" min="0" style="width:45px;padding:0.2rem;">
+                    <input type="number" class="form-input stat-input" data-slot="{{ i }}" data-field="deaths" placeholder="D" min="0" style="width:45px;padding:0.2rem;">
+                    <input type="number" class="form-input stat-input" data-slot="{{ i }}" data-field="assists" placeholder="A" min="0" style="width:45px;padding:0.2rem;">
+                    <input type="number" class="form-input stat-input" data-slot="{{ i }}" data-field="gpm" placeholder="GPM" min="0" style="width:55px;padding:0.2rem;">
+                    <input type="number" class="form-input stat-input" data-slot="{{ i }}" data-field="last_hits" placeholder="LH" min="0" style="width:50px;padding:0.2rem;">
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="flex justify-center mt-4">
+        <button type="submit" class="btn btn-primary" style="font-size:1rem;padding:0.75rem 2rem;" onclick="return prepareSubmit()">
+            Guardar Partida
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Hero data (loaded from static JSON)
+let allHeroes = [];
+fetch('/static/heroes.json')
+    .then(r => r.json())
+    .then(data => { allHeroes = data; });
+
+let searchTimeout = null;
+
+function searchHero(input, slot) {
+    clearTimeout(searchTimeout);
+    const query = input.value.toLowerCase().trim();
+    const resultsDiv = document.getElementById('hero-results-' + slot);
+
+    if (!query) {
+        resultsDiv.style.display = 'none';
+        return;
+    }
+
+    searchTimeout = setTimeout(() => {
+        const matches = allHeroes.filter(h =>
+            h.localized_name.toLowerCase().includes(query)
+        ).slice(0, 8);
+
+        if (matches.length === 0) {
+            resultsDiv.style.display = 'none';
+            return;
+        }
+
+        resultsDiv.innerHTML = matches.map(h => `
+            <div class="hero-option" onclick="selectHero(${slot}, ${h.id}, '${h.localized_name}')">
+                <span style="color:${attrColor(h.primary_attr)}">${h.localized_name}</span>
+                <span class="text-muted text-xs">${h.roles.slice(0,2).join(', ')}</span>
+            </div>
+        `).join('');
+        resultsDiv.style.display = 'block';
+    }, 150);
+}
+
+function attrColor(attr) {
+    switch(attr) {
+        case 'str': return '#ef4444';
+        case 'agi': return '#22c55e';
+        case 'int': return '#3b82f6';
+        case 'all': return '#a78bfa';
+        default: return '#94a3b8';
+    }
+}
+
+function selectHero(slot, heroId, heroName) {
+    const input = document.querySelector(`.hero-search[data-slot="${slot}"]`);
+    const hiddenInput = document.querySelector(`.hero-id-input[data-slot="${slot}"]`);
+    input.value = heroName;
+    hiddenInput.value = heroId;
+    document.getElementById('hero-results-' + slot).style.display = 'none';
+}
+
+// Close results on click outside
+document.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('hero-search') && !e.target.classList.contains('hero-option')) {
+        document.querySelectorAll('.hero-picker-results').forEach(el => el.style.display = 'none');
+    }
+});
+
+function prepareSubmit() {
+    const players = [];
+    let valid = true;
+
+    for (let i = 0; i < 10; i++) {
+        const heroIdInput = document.querySelector(`.hero-id-input[data-slot="${i}"]`);
+        const heroId = parseInt(heroIdInput?.value);
+
+        if (!heroId) {
+            const searchInput = document.querySelector(`.hero-search[data-slot="${i}"]`);
+            if (searchInput?.value) {
+                // Try to match by name
+                const match = allHeroes.find(h =>
+                    h.localized_name.toLowerCase() === searchInput.value.toLowerCase().trim()
+                );
+                if (match) {
+                    heroIdInput.value = match.id;
+                } else {
+                    alert(`Slot ${i < 5 ? 'Radiant ' + (i+1) : 'Dire ' + (i-4)}: héroe no encontrado. Selecciona de la lista.`);
+                    valid = false;
+                    break;
+                }
+            } else {
+                alert(`Slot ${i < 5 ? 'Radiant ' + (i+1) : 'Dire ' + (i-4)}: selecciona un héroe.`);
+                valid = false;
+                break;
+            }
+        }
+
+        const getVal = (field) => {
+            const el = document.querySelector(`.stat-input[data-slot="${i}"][data-field="${field}"]`);
+            return parseInt(el?.value) || 0;
+        };
+
+        players.push({
+            hero_id: parseInt(heroIdInput.value),
+            kills: getVal('kills'),
+            deaths: getVal('deaths'),
+            assists: getVal('assists'),
+            gpm: getVal('gpm'),
+            last_hits: getVal('last_hits'),
+        });
+    }
+
+    if (!valid) return false;
+
+    document.getElementById('match-data').value = JSON.stringify(players);
+    return true;
+}
+</script>
+{% endblock %}

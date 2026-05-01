@@ -1,32 +1,50 @@
 """Application settings loaded from environment variables."""
 
-from pydantic import Field
+from __future__ import annotations
+
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    # API keys
-    opendota_api_key: str = ""
-    stratz_api_token: str = ""
-    steam_api_key: str = ""
+    # Cafe
+    cafe_name: str = "Dota Cafe"
 
-    # Player
-    my_steam_id: int = 0
-    high_mmr_threshold: int = 7000
+    # Database (PostgreSQL)
+    database_url: str = "postgresql://localhost:5432/dotacafe"
 
-    # Database
-    database_url: str = "postgresql+psycopg://dota:dota@localhost:5432/dotaengineer"
-    duckdb_path: str = "./data/warehouse.duckdb"
+    # Replay
+    replay_watch_dir: str = ""
+    replay_upload_dir: str = "./data/replays"
 
-    # Storage
-    raw_data_path: str = "./data/raw"
-    processed_data_path: str = "./data/processed"
+    # Server
+    host: str = "0.0.0.0"
+    port: int = 8000
 
-    # Rate limiting
-    opendota_requests_per_minute: int = Field(default=60, description="Free tier limit")
-    stratz_requests_per_minute: int = Field(default=30, description="Free tier limit")
+    # Admin (access /admin?token=THIS_VALUE to enable write mode)
+    admin_token: str = "changeme"
+
+    # ELO
+    elo_k_factor: int = 32
+    elo_calibration_k: int = 48
+    elo_calibration_games: int = 10
+    elo_starting_mmr: int = 1000
+    elo_floor: int = 100
+
+    @property
+    def static_dir(self) -> Path:
+        return Path(__file__).parent / "static"
+
+    @property
+    def template_dir(self) -> Path:
+        return Path(__file__).parent / "templates"
+
+    @property
+    def heroes_json_path(self) -> Path:
+        return self.static_dir / "heroes.json"
 
 
 settings = Settings()

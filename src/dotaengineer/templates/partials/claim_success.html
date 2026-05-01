@@ -1,0 +1,9 @@
+<a href="/players/{{ player.id }}">{{ player.display_name }}</a>
+
+<script>
+// Remove the claimed player from all other claim dropdowns
+document.querySelectorAll('.claim-select').forEach(function(sel) {
+    var opt = sel.querySelector('option[value="{{ player.id }}"]');
+    if (opt) opt.remove();
+});
+</script>
