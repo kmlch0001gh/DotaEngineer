@@ -138,22 +138,85 @@
 {% if mmr_history %}
 <div class="card mt-4">
     <div class="card-header">Historial de MMR</div>
-    <div style="display:flex;align-items:flex-end;gap:2px;height:120px;padding:0.5rem 0;">
-        {% set mmr_values = mmr_history | map(attribute='mmr_after') | list %}
-        {% set mmr_min = mmr_values | min - 20 %}
-        {% set mmr_max = mmr_values | max + 20 %}
-        {% set mmr_range = mmr_max - mmr_min if mmr_max != mmr_min else 1 %}
-        {% for h in mmr_history %}
-        {% set height = ((h.mmr_after - mmr_min) / mmr_range * 100) %}
-        <div style="flex:1;min-width:4px;max-width:20px;height:{{ height }}%;background:{% if h.mmr_change >= 0 %}var(--success){% else %}var(--error){% endif %};border-radius:2px 2px 0 0;"
-             title="Match #{{ h.match_id }}: {{ h.mmr_after }} ({% if h.mmr_change >= 0 %}+{% endif %}{{ h.mmr_change }})">
-        </div>
+    {% set mmr_values = mmr_history | map(attribute='mmr_after') | list %}
+    {% set baseline = 1000 %}
+    {% set y_min = [mmr_values | min, baseline] | min - 30 %}
+    {% set y_max = [mmr_values | max, baseline] | max + 30 %}
+    {% set y_range = y_max - y_min if y_max != y_min else 1 %}
+    {% set w = 600 %}
+    {% set h = 150 %}
+    {% set pad_l = 40 %}
+    {% set pad_r = 30 %}
+    {% set pad_t = 10 %}
+    {% set pad_b = 20 %}
+    {% set chart_w = w - pad_l - pad_r %}
+    {% set chart_h = h - pad_t - pad_b %}
+    {% set n = mmr_history | length %}
+    {% set x_step = chart_w / [n - 1, 1] | max %}
+    {% set base_y = pad_t + (y_max - baseline) / y_range * chart_h %}
+
+    <svg viewBox="0 0 {{ w }} {{ h }}" style="width:100%;height:auto;display:block;" preserveAspectRatio="xMidYMid meet">
+        <!-- Baseline at 1000 -->
+        <line x1="{{ pad_l }}" y1="{{ base_y }}" x2="{{ w - pad_r }}" y2="{{ base_y }}"
+              stroke="#64748b" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="{{ pad_l - 4 }}" y="{{ base_y + 3 }}" fill="#64748b" font-size="9" text-anchor="end">{{ baseline }}</text>
+
+        <!-- Y-axis labels -->
+        <text x="{{ pad_l - 4 }}" y="{{ pad_t + 4 }}" fill="#64748b" font-size="9" text-anchor="end">{{ y_max | int }}</text>
+        <text x="{{ pad_l - 4 }}" y="{{ h - pad_b + 4 }}" fill="#64748b" font-size="9" text-anchor="end">{{ y_min | int }}</text>
+
+        <!-- Green area (above 1000) -->
+        {% set points_above = [] %}
+        {% for entry in mmr_history %}
+        {% set x = pad_l + loop.index0 * x_step %}
+        {% set mmr_y = pad_t + (y_max - entry.mmr_after) / y_range * chart_h %}
+        {% set clipped_y = [mmr_y, base_y] | min %}
+        {% if points_above.append(x | string + ',' + clipped_y | string) %}{% endif %}
         {% endfor %}
-    </div>
-    <div class="flex justify-between text-xs text-muted">
-        <span>{{ mmr_min + 20 }}</span>
-        <span>{{ mmr_max - 20 }}</span>
-    </div>
+        <polygon points="{{ pad_l }},{{ base_y }} {{ points_above | join(' ') }} {{ pad_l + (n - 1) * x_step }},{{ base_y }}"
+                 fill="rgba(34,197,94,0.15)"/>
+
+        <!-- Red area (below 1000) -->
+        {% set points_below = [] %}
+        {% for entry in mmr_history %}
+        {% set x = pad_l + loop.index0 * x_step %}
+        {% set mmr_y = pad_t + (y_max - entry.mmr_after) / y_range * chart_h %}
+        {% set clipped_y = [mmr_y, base_y] | max %}
+        {% if points_below.append(x | string + ',' + clipped_y | string) %}{% endif %}
+        {% endfor %}
+        <polygon points="{{ pad_l }},{{ base_y }} {{ points_below | join(' ') }} {{ pad_l + (n - 1) * x_step }},{{ base_y }}"
+                 fill="rgba(239,68,68,0.15)"/>
+
+        <!-- Line -->
+        {% set line_points = [] %}
+        {% for entry in mmr_history %}
+        {% set x = pad_l + loop.index0 * x_step %}
+        {% set mmr_y = pad_t + (y_max - entry.mmr_after) / y_range * chart_h %}
+        {% if line_points.append(x | string + ',' + mmr_y | string) %}{% endif %}
+        {% endfor %}
+        <polyline points="{{ line_points | join(' ') }}"
+                  fill="none" stroke="#f59e0b" stroke-width="2" stroke-linejoin="round"/>
+
+        <!-- Dots + tooltips -->
+        {% for entry in mmr_history %}
+        {% set x = pad_l + loop.index0 * x_step %}
+        {% set mmr_y = pad_t + (y_max - entry.mmr_after) / y_range * chart_h %}
+        <circle cx="{{ x }}" cy="{{ mmr_y }}" r="3.5"
+                fill="{% if entry.mmr_after >= baseline %}#22c55e{% else %}#ef4444{% endif %}"
+                stroke="var(--bg-card)" stroke-width="1.5">
+            <title>{{ entry.mmr_after }} ({% if entry.mmr_change >= 0 %}+{% endif %}{{ entry.mmr_change }})</title>
+        </circle>
+        {% endfor %}
+
+        <!-- Current MMR label at end -->
+        {% set last = mmr_history[-1] %}
+        {% set last_x = pad_l + (n - 1) * x_step %}
+        {% set last_y = pad_t + (y_max - last.mmr_after) / y_range * chart_h %}
+        {% set label_above = last_y > (pad_t + chart_h / 2) %}
+        <text x="{{ last_x }}" y="{% if label_above %}{{ last_y - 10 }}{% else %}{{ last_y + 15 }}{% endif %}"
+              fill="{% if last.mmr_after >= baseline %}#22c55e{% else %}#ef4444{% endif %}"
+              font-size="11" font-weight="700" text-anchor="end">{{ last.mmr_after }}</text>
+    </svg>
 </div>
 {% endif %}
 {% endblock %}
