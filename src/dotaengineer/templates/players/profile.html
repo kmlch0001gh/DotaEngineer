@@ -104,10 +104,11 @@
         <div class="table-wrap">
             <table>
                 <thead>
-                    <tr><th>Héroe</th><th>Resultado</th><th>K/D/A</th><th>Fecha</th></tr>
+                    <tr><th>Héroe</th><th>Resultado</th><th>MMR</th><th>K/D/A</th><th>Fecha</th></tr>
                 </thead>
                 <tbody>
                     {% for m in recent_matches %}
+                    {% set delta = mmr_by_match.get(m.match_id) %}
                     <tr>
                         <td>
                             <a href="/matches/{{ m.match_id }}" class="hero-cell"><img src="{{ m.hero_id | hero_icon }}" class="hero-icon" alt="{{ m.hero_name }}">{{ m.hero_name }}</a>
@@ -116,6 +117,9 @@
                             <span class="badge {% if m.won %}badge-win{% else %}badge-loss{% endif %}">
                                 {% if m.won %}WIN{% else %}LOSS{% endif %}
                             </span>
+                        </td>
+                        <td class="font-mono font-bold {% if delta and delta > 0 %}win{% elif delta and delta < 0 %}loss{% else %}text-muted{% endif %}">
+                            {% if delta %}{% if delta > 0 %}+{% endif %}{{ delta }}{% else %}—{% endif %}
                         </td>
                         <td class="font-mono">{{ m.kills }}/{{ m.deaths }}/{{ m.assists }}</td>
                         <td class="text-muted text-xs">{{ m.played_at.strftime('%d/%m %H:%M') }}</td>

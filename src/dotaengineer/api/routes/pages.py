@@ -137,10 +137,16 @@ def player_profile(
         )
     recent_matches = player_service.get_player_recent_matches(player_id, limit=20, con=con)
     mmr_history = leaderboard_service.get_mmr_history(player_id, con)
+    mmr_by_match = {h["match_id"]: h["mmr_change"] for h in mmr_history}
     return templates.TemplateResponse(
         request,
         "players/profile.html",
-        {"stats": stats, "recent_matches": recent_matches, "mmr_history": mmr_history},
+        {
+            "stats": stats,
+            "recent_matches": recent_matches,
+            "mmr_history": mmr_history,
+            "mmr_by_match": mmr_by_match,
+        },
     )
 
 
