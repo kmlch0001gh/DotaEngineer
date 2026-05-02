@@ -82,7 +82,7 @@
                 <tbody>
                     {% for h in stats.hero_breakdown %}
                     <tr>
-                        <td><div class="hero-cell"><img src="{{ h.hero_id | hero_icon }}" class="hero-icon" alt="{{ h.hero_name }}"><span class="font-bold">{{ h.hero_name }}{% if h.hero_name == stats.favorite_hero %} ★{% endif %}</span></div></td>
+                        <td><img src="{{ h.hero_id | hero_icon }}" class="hero-icon-lg" alt="{{ h.hero_name }}" title="{{ h.hero_name }}{% if h.hero_name == stats.favorite_hero %} ★{% endif %}"></td>
                         <td>{{ h.games }}</td>
                         <td class="{% if h.win_rate >= 0.5 %}win{% else %}loss{% endif %}">{{ h.win_rate_pct }}</td>
                         <td class="font-mono">{{ h.avg_kills }}/{{ h.avg_deaths }}/{{ h.avg_assists }}</td>
@@ -111,7 +111,7 @@
                     {% set delta = mmr_by_match.get(m.match_id) %}
                     <tr>
                         <td>
-                            <a href="/matches/{{ m.match_id }}" class="hero-cell"><img src="{{ m.hero_id | hero_icon }}" class="hero-icon" alt="{{ m.hero_name }}">{{ m.hero_name }}</a>
+                            <a href="/matches/{{ m.match_id }}"><img src="{{ m.hero_id | hero_icon }}" class="hero-icon-lg" alt="{{ m.hero_name }}" title="{{ m.hero_name }}"></a>
                         </td>
                         <td>
                             <span class="badge {% if m.won %}badge-win{% else %}badge-loss{% endif %}">
