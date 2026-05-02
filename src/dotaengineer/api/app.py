@@ -117,6 +117,18 @@ def _hero_icon(hero_id: int) -> str:
 templates.env.filters["hero_icon"] = _hero_icon
 
 
+def _item_icon(item_name: str) -> str:
+    """Jinja2 filter: item short name → CDN icon URL."""
+    if not item_name:
+        return ""
+    return (
+        f"https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/{item_name}.png"
+    )
+
+
+templates.env.filters["item_icon"] = _item_icon
+
+
 # ── Route modules ────────────────────────────────────────────────────────────
 
 from dotaengineer.api.routes import leaderboard, matches, pages, players  # noqa: E402

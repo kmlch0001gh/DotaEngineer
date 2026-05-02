@@ -185,6 +185,42 @@
             align-items: center;
             gap: 0.375rem;
         }
+        .item-icon {
+            width: 27px;
+            height: 20px;
+            object-fit: contain;
+            border-radius: 2px;
+            vertical-align: middle;
+        }
+        .items-cell {
+            display: flex;
+            align-items: center;
+        }
+        .items-slots {
+            display: flex;
+            gap: 1px;
+            min-width: calc(27px * 9 + 1px * 8); /* 9 item slots fixed */
+        }
+        .item-neutral {
+            width: 20px;
+            height: 20px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 1.5px solid #94a3b8;
+            margin-left: 5px;
+            flex-shrink: 0;
+        }
+        .aghs-badge {
+            margin-left: 5px;
+            flex-shrink: 0;
+            vertical-align: middle;
+        }
+        .aghs-top, .aghs-bot {
+            fill: #3a3a4a;
+        }
+        .aghs-on {
+            fill: #3b82f6;
+        }
 
         /* Team colors */
         .radiant { color: var(--radiant); }

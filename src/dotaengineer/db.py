@@ -87,6 +87,16 @@ CREATE TABLE IF NOT EXISTS mmr_history (
     UNIQUE(player_id, match_id)
 );
 
+-- Item Purchases (purchase log per player per match)
+CREATE TABLE IF NOT EXISTS match_purchases (
+    id              SERIAL PRIMARY KEY,
+    match_id        INTEGER NOT NULL REFERENCES matches(id) ON DELETE CASCADE,
+    slot            INTEGER NOT NULL,
+    item_name       VARCHAR NOT NULL,
+    game_time       REAL NOT NULL,
+    purchase_order  INTEGER NOT NULL
+);
+
 -- Match Bans (heroes banned during draft)
 CREATE TABLE IF NOT EXISTS match_bans (
     id              SERIAL PRIMARY KEY,
@@ -105,6 +115,8 @@ CREATE INDEX IF NOT EXISTS idx_mmr_history_player ON mmr_history(player_id);
 CREATE INDEX IF NOT EXISTS idx_matches_played_at ON matches(played_at DESC);
 CREATE INDEX IF NOT EXISTS idx_match_bans_match ON match_bans(match_id);
 CREATE INDEX IF NOT EXISTS idx_match_bans_hero ON match_bans(hero_id);
+CREATE INDEX IF NOT EXISTS idx_match_purchases_match ON match_purchases(match_id);
+CREATE INDEX IF NOT EXISTS idx_match_purchases_slot ON match_purchases(match_id, slot);
 """
 
 

@@ -37,6 +37,9 @@ class MatchCreate(BaseModel):
     notes: str = ""
     players: list[MatchPlayerCreate] = Field(min_length=2, max_length=10)
     bans: list[int] = Field(default_factory=list)  # hero IDs banned during draft
+    purchase_log: dict[str, list[dict]] = Field(default_factory=dict)
+    # hero_final_items: {hero_short_name: [item_name, ...]} from entity state
+    hero_final_items: dict[str, list[str]] = Field(default_factory=dict)
     source: str = "manual"
     replay_file: str | None = None
 
@@ -63,6 +66,16 @@ class MatchPlayer(BaseModel):
     hero_healing: int = 0
     level: int = 0
     items_json: str = "[]"
+
+    @property
+    def final_items(self) -> list[str]:
+        import json
+
+        try:
+            return json.loads(self.items_json)
+        except (json.JSONDecodeError, TypeError):
+            return []
+
     won: bool = False
 
     @property

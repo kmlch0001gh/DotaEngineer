@@ -157,6 +157,8 @@ def _java_json_to_match(data: dict, replay_path: Path) -> MatchCreate:
         dire_score=data.get("dire_score", 0),
         players=players,
         bans=data.get("bans", []),
+        purchase_log=data.get("purchase_log", {}),
+        hero_final_items=data.get("hero_final_items", {}),
         source="replay",
         replay_file=str(replay_path),
     )

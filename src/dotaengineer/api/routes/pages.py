@@ -72,10 +72,38 @@ def match_detail(
         [match_id],
     ).fetchall():
         mmr_changes[row[0]] = row[1]
+    # Aghanim's status per slot: check purchase log for shard, inventory for scepter
+    aghs_status = {}
+    shard_rows = con.execute(
+        """SELECT slot FROM match_purchases
+           WHERE match_id = ? AND item_name = 'aghanims_shard'""",
+        [match_id],
+    ).fetchall()
+    for (s,) in shard_rows:
+        aghs_status.setdefault(s, {})["shard"] = True
+
+    for p in match.players:
+        aghs_status.setdefault(p.slot, {})
+        if "ultimate_scepter" in p.final_items:
+            aghs_status[p.slot]["scepter"] = True
+        # Also check purchase log for scepter blessing (consumed, not in inventory)
+    scepter_rows = con.execute(
+        """SELECT slot FROM match_purchases
+           WHERE match_id = ? AND item_name = 'ultimate_scepter'""",
+        [match_id],
+    ).fetchall()
+    for (s,) in scepter_rows:
+        aghs_status.setdefault(s, {})["scepter"] = True
+
     return templates.TemplateResponse(
         request,
         "matches/detail.html",
-        {"match": match, "players": players, "mmr_changes": mmr_changes},
+        {
+            "match": match,
+            "players": players,
+            "mmr_changes": mmr_changes,
+            "aghs_status": aghs_status,
+        },
     )
 
 

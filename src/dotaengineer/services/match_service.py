@@ -37,10 +37,26 @@ def create_match(data: MatchCreate, con: Connection) -> int:
     ).fetchone()
     match_id = row[0]
 
+    # Build hero_id → final items mapping from entity state
+    final_items_map: dict[int, list[str]] = {}
+    if data.hero_final_items:
+        from dotaengineer.models.hero import get_all_heroes
+
+        # Entity class names may omit underscores (sandking vs sand_king)
+        # Build a normalized lookup: strip underscores for matching
+        normalized = {k.replace("_", ""): v for k, v in data.hero_final_items.items()}
+
+        for h in get_all_heroes():
+            short = h.name.replace("npc_dota_hero_", "")
+            raw = data.hero_final_items.get(short) or normalized.get(short.replace("_", ""))
+            if raw:
+                items = [i.replace("__", "_") for i in raw]
+                final_items_map[h.id] = items
+
     for p in data.players:
         hero_name = get_hero_name(p.hero_id)
         won = (p.team == "radiant") == data.radiant_win
-        items_json = json.dumps(p.items)
+        items_json = json.dumps(final_items_map.get(p.hero_id, p.items))
         con.execute(
             """
             INSERT INTO match_players (match_id, slot, hero_id, hero_name, team,
@@ -82,6 +98,26 @@ def create_match(data: MatchCreate, con: Connection) -> int:
                VALUES (?, ?, ?, ?)""",
             [match_id, hero_id, ban_hero_name, i],
         )
+
+    # Insert item purchases — match purchase_log keys to player slots by hero name
+    if data.purchase_log:
+        from dotaengineer.models.hero import get_all_heroes
+
+        # Build hero_id → short_name map
+        id_to_short = {}
+        for h in get_all_heroes():
+            id_to_short[h.id] = h.name.replace("npc_dota_hero_", "")
+
+        for p in data.players:
+            short = id_to_short.get(p.hero_id, "")
+            purchases = data.purchase_log.get(short, [])
+            for order, item in enumerate(purchases):
+                con.execute(
+                    """INSERT INTO match_purchases
+                       (match_id, slot, item_name, game_time, purchase_order)
+                       VALUES (?, ?, ?, ?, ?)""",
+                    [match_id, p.slot, item["item"], item["time"], order],
+                )
 
     log.info("match_created", match_id=match_id, source=data.source, bans=len(data.bans))
     return match_id
