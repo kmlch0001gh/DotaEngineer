@@ -7,7 +7,6 @@ import json
 import structlog
 
 from dotaengineer.db import Connection
-from dotaengineer.elo import process_match_elo
 from dotaengineer.models.hero import get_hero_name
 from dotaengineer.models.match import CafeMatch, MatchCreate, MatchPlayer
 
@@ -247,13 +246,10 @@ def claim_slot(
     ).fetchone()[0]
 
     if unclaimed == 0:
-        # Check ELO hasn't been processed yet
-        elo_exists = con.execute(
-            "SELECT 1 FROM mmr_history WHERE match_id = ? LIMIT 1",
-            [match_id],
-        ).fetchone()
-        if not elo_exists:
-            process_match_elo(match_id, con)
+        # Recalculate all ELO (handles both fresh and re-claim scenarios)
+        from dotaengineer.elo import recalculate_all
+
+        recalculate_all(con)
 
     log.info("slot_claimed", match_id=match_id, slot=slot, player_id=player_id)
     return True
@@ -264,7 +260,7 @@ def unclaim_slot(
     slot: int,
     con: Connection,
 ) -> bool:
-    """Remove a player from a match slot. Returns True if successful."""
+    """Remove a player from a match slot and recalculate ELO if needed."""
     existing = con.execute(
         "SELECT player_id FROM match_players WHERE match_id = ? AND slot = ?",
         [match_id, slot],
@@ -273,10 +269,23 @@ def unclaim_slot(
     if not existing or existing[0] is None:
         return False
 
+    # Check if this match had ELO calculated
+    had_elo = con.execute(
+        "SELECT 1 FROM mmr_history WHERE match_id = ? LIMIT 1",
+        [match_id],
+    ).fetchone()
+
     con.execute(
-        "UPDATE match_players SET player_id = NULL WHERE match_id = ? AND slot = ?",
+        "UPDATE match_players SET player_id = NULL, role = NULL WHERE match_id = ? AND slot = ?",
         [match_id, slot],
     )
+
+    # If match had ELO, recalculate everything from scratch
+    if had_elo:
+        from dotaengineer.elo import recalculate_all
+
+        recalculate_all(con)
+        log.info("elo_recalculated_after_unclaim", match_id=match_id, slot=slot)
 
     log.info("slot_unclaimed", match_id=match_id, slot=slot)
     return True

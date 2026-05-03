@@ -77,9 +77,9 @@ def force_elo(
     """Force ELO calculation (admin only)."""
     if not is_admin(request):
         return HTMLResponse(status_code=403)
-    from dotaengineer.elo import process_match_elo
+    from dotaengineer.elo import recalculate_all
 
-    process_match_elo(match_id, con)
+    recalculate_all(con)
     return HTMLResponse(headers={"HX-Redirect": f"/matches/{match_id}"}, content="")
 
 
