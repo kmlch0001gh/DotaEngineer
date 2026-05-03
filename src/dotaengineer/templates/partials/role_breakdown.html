@@ -1,0 +1,43 @@
+{% set role_names = {'pos1': 'Carry', 'pos2': 'Mid', 'pos3': 'Offlane', 'pos4': 'Support', 'pos5': 'Hard Support'} %}
+<div class="card" style="margin-top:0.5rem;padding:0.75rem;background:var(--bg-secondary);">
+    <div class="text-xs text-muted mb-2" style="text-transform:uppercase;letter-spacing:0.05em;">Desglose {{ role_names.get(role, role) }}</div>
+    {% if breakdown %}
+    <table style="width:100%;font-size:0.75rem;">
+        <thead>
+            <tr>
+                <th style="text-align:left;padding:0.25rem;">Métrica</th>
+                <th style="text-align:right;padding:0.25rem;">Peso</th>
+                <th style="text-align:right;padding:0.25rem;">Tu Avg</th>
+                <th style="text-align:right;padding:0.25rem;">Mejor</th>
+                <th style="text-align:right;padding:0.25rem;">%</th>
+                <th style="text-align:right;padding:0.25rem;">Puntos</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set total = {'v': 0} %}
+            {% for b in breakdown %}
+            <tr>
+                <td style="padding:0.25rem;">{{ b.label }}</td>
+                <td style="text-align:right;padding:0.25rem;" class="text-muted">{{ b.weight_pct }}%</td>
+                <td style="text-align:right;padding:0.25rem;" class="font-mono">{{ b.avg_value }}</td>
+                <td style="text-align:right;padding:0.25rem;" class="font-mono text-muted">{{ b.best_value }}</td>
+                <td style="text-align:right;padding:0.25rem;">
+                    <div style="display:inline-block;width:40px;height:8px;background:var(--bg-card);border-radius:4px;overflow:hidden;">
+                        <div style="width:{{ b.normalized }}%;height:100%;background:{% if b.normalized >= 70 %}var(--success){% elif b.normalized >= 40 %}var(--accent){% else %}var(--error){% endif %};border-radius:4px;"></div>
+                    </div>
+                    <span class="font-mono">{{ b.normalized }}%</span>
+                </td>
+                <td style="text-align:right;padding:0.25rem;" class="font-mono font-bold" style="color:var(--accent);">{{ b.contribution }}</td>
+            </tr>
+            {% if total.update({'v': total.v + b.contribution}) %}{% endif %}
+            {% endfor %}
+            <tr style="border-top:2px solid var(--border);">
+                <td style="padding:0.25rem;" class="font-bold" colspan="5">Total</td>
+                <td style="text-align:right;padding:0.25rem;" class="font-mono font-bold" style="color:var(--accent);">{{ total.v | round(1) }}</td>
+            </tr>
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted text-xs">Sin datos para este rol.</p>
+    {% endif %}
+</div>

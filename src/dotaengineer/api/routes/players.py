@@ -67,3 +67,21 @@ def edit_player(
 
     player_service.update_player(player_id, display_name, username, con)
     return HTMLResponse(headers={"HX-Redirect": f"/players/{player_id}"}, content="")
+
+
+@router.get("/{player_id}/role-breakdown/{role}", response_class=HTMLResponse)
+def role_breakdown(
+    request: Request,
+    player_id: int,
+    role: str,
+    con: Connection = Depends(get_db),
+):
+    """Return role score breakdown as HTML partial."""
+    from dotaengineer.services.role_service import get_role_score_breakdown
+
+    breakdown = get_role_score_breakdown(player_id, role, con)
+    return templates.TemplateResponse(
+        request,
+        "partials/role_breakdown.html",
+        {"breakdown": breakdown, "role": role},
+    )

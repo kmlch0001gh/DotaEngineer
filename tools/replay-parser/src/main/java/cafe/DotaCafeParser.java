@@ -33,25 +33,29 @@ public class DotaCafeParser {
     final int[] prLevel = new int[20];
     final int[] prHeroId = new int[20];
 
-    // Per-team-slot stats from CDOTA_DataRadiant (indexed 0-4)
-    final int[] radNetWorth = new int[5];
-    final int[] radLastHits = new int[5];
-    final int[] radDenies = new int[5];
-    final int[] radHeroDamage = new int[5];
-    final int[] radTowerDamage = new int[5];
-    final int[] radHeroHealing = new int[5];
-    final int[] radTotalGold = new int[5];
-    final int[] radTotalXP = new int[5];
-
-    // Per-team-slot stats from CDOTA_DataDire (indexed 0-4)
-    final int[] direNetWorth = new int[5];
-    final int[] direLastHits = new int[5];
-    final int[] direDenies = new int[5];
-    final int[] direHeroDamage = new int[5];
-    final int[] direTowerDamage = new int[5];
-    final int[] direHeroHealing = new int[5];
-    final int[] direTotalGold = new int[5];
-    final int[] direTotalXP = new int[5];
+    // Per-team-slot stats from CDOTA_DataRadiant/Dire (indexed 0-4)
+    // [0]=radiant, [1]=dire
+    final int[][] netWorthT = new int[2][5];
+    final int[][] lastHitsT = new int[2][5];
+    final int[][] deniesT = new int[2][5];
+    final int[][] heroDamageT = new int[2][5];
+    final int[][] towerDamageT = new int[2][5];
+    final int[][] heroHealingT = new int[2][5];
+    final int[][] totalGoldT = new int[2][5];
+    final int[][] totalXPT = new int[2][5];
+    // New role-relevant stats
+    final int[][] obsWardsPlacedT = new int[2][5];
+    final int[][] sentryWardsPlacedT = new int[2][5];
+    final int[][] wardsDestroyedT = new int[2][5];
+    final int[][] campsStackedT = new int[2][5];
+    final float[][] stunDurationT = new float[2][5];
+    final int[][] smokesUsedT = new int[2][5];
+    final int[][] goldSpentSupportT = new int[2][5];
+    final int[][] goldSpentBuybacksT = new int[2][5];
+    final float[][] damageTakenT = new float[2][5];
+    final int[][] runePickupsT = new int[2][5];
+    final int[][] roshanKillsT = new int[2][5];
+    final int[][] towerKillsT = new int[2][5];
 
     float gameTime = 0;
     float gameStartTime = 0;
@@ -96,29 +100,35 @@ public class DotaCafeParser {
                     int hid = ri(e, p + "m_nSelectedHeroID");
                     if (hid > 0) prHeroId[i] = hid;
                 }
-            } else if ("CDOTA_DataRadiant".equals(dt)) {
+            } else if ("CDOTA_DataRadiant".equals(dt) || "CDOTA_DataDire".equals(dt)) {
+                int t = "CDOTA_DataRadiant".equals(dt) ? 0 : 1;
                 for (int i = 0; i < 5; i++) {
                     String p = "m_vecDataTeam." + pad(i) + ".";
-                    radNetWorth[i] = ri(e, p + "m_iNetWorth");
-                    radLastHits[i] = ri(e, p + "m_iLastHitCount");
-                    radDenies[i] = ri(e, p + "m_iDenyCount");
-                    radHeroDamage[i] = (int) rf(e, p + "m_flHeroDamage");
-                    radTowerDamage[i] = (int) rf(e, p + "m_flTowerDamage");
-                    radHeroHealing[i] = (int) rf(e, p + "m_flHeroHealing");
-                    radTotalGold[i] = ri(e, p + "m_iTotalEarnedGold");
-                    radTotalXP[i] = ri(e, p + "m_iTotalEarnedXP");
-                }
-            } else if ("CDOTA_DataDire".equals(dt)) {
-                for (int i = 0; i < 5; i++) {
-                    String p = "m_vecDataTeam." + pad(i) + ".";
-                    direNetWorth[i] = ri(e, p + "m_iNetWorth");
-                    direLastHits[i] = ri(e, p + "m_iLastHitCount");
-                    direDenies[i] = ri(e, p + "m_iDenyCount");
-                    direHeroDamage[i] = (int) rf(e, p + "m_flHeroDamage");
-                    direTowerDamage[i] = (int) rf(e, p + "m_flTowerDamage");
-                    direHeroHealing[i] = (int) rf(e, p + "m_flHeroHealing");
-                    direTotalGold[i] = ri(e, p + "m_iTotalEarnedGold");
-                    direTotalXP[i] = ri(e, p + "m_iTotalEarnedXP");
+                    netWorthT[t][i] = ri(e, p + "m_iNetWorth");
+                    lastHitsT[t][i] = ri(e, p + "m_iLastHitCount");
+                    deniesT[t][i] = ri(e, p + "m_iDenyCount");
+                    heroDamageT[t][i] = (int) rf(e, p + "m_flHeroDamage");
+                    towerDamageT[t][i] = (int) rf(e, p + "m_flTowerDamage");
+                    heroHealingT[t][i] = (int) rf(e, p + "m_flHeroHealing");
+                    totalGoldT[t][i] = ri(e, p + "m_iTotalEarnedGold");
+                    totalXPT[t][i] = ri(e, p + "m_iTotalEarnedXP");
+                    // Role-relevant stats
+                    obsWardsPlacedT[t][i] = ri(e, p + "m_iObserverWardsPlaced");
+                    sentryWardsPlacedT[t][i] = ri(e, p + "m_iSentryWardsPlaced");
+                    wardsDestroyedT[t][i] = ri(e, p + "m_iWardsDestroyed");
+                    campsStackedT[t][i] = ri(e, p + "m_iCampsStacked");
+                    stunDurationT[t][i] = rf(e, p + "m_fStuns");
+                    smokesUsedT[t][i] = ri(e, p + "m_iSmokesUsed");
+                    goldSpentSupportT[t][i] = ri(e, p + "m_iGoldSpentOnSupport");
+                    goldSpentBuybacksT[t][i] = ri(e, p + "m_iGoldSpentOnBuybacks");
+                    runePickupsT[t][i] = ri(e, p + "m_iRunePickups");
+                    roshanKillsT[t][i] = ri(e, p + "m_iRoshanKills");
+                    towerKillsT[t][i] = ri(e, p + "m_iTowerKills");
+                    // Damage taken = sum of 3 damage types post-reduction
+                    float dt0 = rf(e, p + "m_flDamageByTypeReceivedPostReduction.0000");
+                    float dt1 = rf(e, p + "m_flDamageByTypeReceivedPostReduction.0001");
+                    float dt2 = rf(e, p + "m_flDamageByTypeReceivedPostReduction.0002");
+                    damageTakenT[t][i] = dt0 + dt1 + dt2;
                 }
             } else if ("CDOTATeam".equals(dt)) {
                 // no-op: kills tracked via prKills sum
@@ -324,50 +334,52 @@ public class DotaCafeParser {
         List<Map<String, Object>> players = new ArrayList<>();
         int slot = 0;
 
-        for (int teamSlot = 0; teamSlot < radiantPids.size(); teamSlot++) {
-            int pid = radiantPids.get(teamSlot);
-            int prIdx = pid / 2;
-            String name = parser.playerName.getOrDefault(pid, "");
-            int heroId = parser.prHeroId[prIdx];
-            // Find purchase log for this hero
-            String heroKey = findHeroKey(parser, heroId);
-            List<Map<String, Object>> items = parser.purchaseLog.getOrDefault(heroKey, List.of());
+        // Build players for both teams using unified arrays
+        int[][] teamPids = {
+            radiantPids.stream().mapToInt(Integer::intValue).toArray(),
+            direPids.stream().mapToInt(Integer::intValue).toArray()
+        };
+        String[] teamNames = {"radiant", "dire"};
 
-            Map<String, Object> p = buildPlayer(slot, heroId, name, "radiant",
-                parser.prKills[prIdx], parser.prDeaths[prIdx], parser.prAssists[prIdx],
-                parser.prLevel[prIdx],
-                parser.radLastHits[teamSlot], parser.radDenies[teamSlot],
-                parser.radNetWorth[teamSlot], parser.radHeroDamage[teamSlot],
-                parser.radTowerDamage[teamSlot], parser.radHeroHealing[teamSlot],
-                parser.radTotalGold[teamSlot], parser.radTotalXP[teamSlot],
-                gameTimeMins, items);
-            // Add final inventory from entity state
-            String heroShort = findHeroShortName(parser, heroId);
-            p.put("final_items", parser.heroFinalItems.getOrDefault(heroShort, List.of()));
-            players.add(p);
-            slot++;
-        }
+        for (int t = 0; t < 2; t++) {
+            for (int teamSlot = 0; teamSlot < teamPids[t].length; teamSlot++) {
+                int pid = teamPids[t][teamSlot];
+                int prIdx = pid / 2;
+                String pname = parser.playerName.getOrDefault(pid, "");
+                int heroId = parser.prHeroId[prIdx];
+                String heroKey = findHeroKey(parser, heroId);
+                List<Map<String, Object>> items = parser.purchaseLog.getOrDefault(heroKey, List.of());
 
-        for (int teamSlot = 0; teamSlot < direPids.size(); teamSlot++) {
-            int pid = direPids.get(teamSlot);
-            int prIdx = pid / 2;
-            String name = parser.playerName.getOrDefault(pid, "");
-            int heroId = parser.prHeroId[prIdx];
-            String heroKey = findHeroKey(parser, heroId);
-            List<Map<String, Object>> items = parser.purchaseLog.getOrDefault(heroKey, List.of());
+                Map<String, Object> p = buildPlayer(slot, heroId, pname, teamNames[t],
+                    parser.prKills[prIdx], parser.prDeaths[prIdx], parser.prAssists[prIdx],
+                    parser.prLevel[prIdx],
+                    parser.lastHitsT[t][teamSlot], parser.deniesT[t][teamSlot],
+                    parser.netWorthT[t][teamSlot], parser.heroDamageT[t][teamSlot],
+                    parser.towerDamageT[t][teamSlot], parser.heroHealingT[t][teamSlot],
+                    parser.totalGoldT[t][teamSlot], parser.totalXPT[t][teamSlot],
+                    gameTimeMins, items);
 
-            Map<String, Object> p = buildPlayer(slot, heroId, name, "dire",
-                parser.prKills[prIdx], parser.prDeaths[prIdx], parser.prAssists[prIdx],
-                parser.prLevel[prIdx],
-                parser.direLastHits[teamSlot], parser.direDenies[teamSlot],
-                parser.direNetWorth[teamSlot], parser.direHeroDamage[teamSlot],
-                parser.direTowerDamage[teamSlot], parser.direHeroHealing[teamSlot],
-                parser.direTotalGold[teamSlot], parser.direTotalXP[teamSlot],
-                gameTimeMins, items);
-            String heroShort2 = findHeroShortName(parser, heroId);
-            p.put("final_items", parser.heroFinalItems.getOrDefault(heroShort2, List.of()));
-            players.add(p);
-            slot++;
+                // Role-relevant stats
+                p.put("obs_wards_placed", parser.obsWardsPlacedT[t][teamSlot]);
+                p.put("sentry_wards_placed", parser.sentryWardsPlacedT[t][teamSlot]);
+                p.put("wards_destroyed", parser.wardsDestroyedT[t][teamSlot]);
+                p.put("camps_stacked", parser.campsStackedT[t][teamSlot]);
+                p.put("stun_duration", parser.stunDurationT[t][teamSlot]);
+                p.put("smokes_used", parser.smokesUsedT[t][teamSlot]);
+                p.put("gold_spent_support", parser.goldSpentSupportT[t][teamSlot]);
+                p.put("gold_spent_buybacks", parser.goldSpentBuybacksT[t][teamSlot]);
+                p.put("damage_taken", (int) parser.damageTakenT[t][teamSlot]);
+                p.put("rune_pickups", parser.runePickupsT[t][teamSlot]);
+                p.put("roshan_kills", parser.roshanKillsT[t][teamSlot]);
+                p.put("tower_kills", parser.towerKillsT[t][teamSlot]);
+
+                // Final inventory from entity state
+                String heroShort = findHeroShortName(parser, heroId);
+                p.put("final_items", parser.heroFinalItems.getOrDefault(heroShort, List.of()));
+
+                players.add(p);
+                slot++;
+            }
         }
 
         // Bans

@@ -25,6 +25,16 @@ class MatchPlayerCreate(BaseModel):
     hero_healing: int = 0
     level: int = 0
     items: list[str] = Field(default_factory=list)
+    obs_wards_placed: int = 0
+    sentry_wards_placed: int = 0
+    wards_destroyed: int = 0
+    camps_stacked: int = 0
+    stun_duration: float = 0
+    damage_taken: int = 0
+    gold_spent_support: int = 0
+    rune_pickups: int = 0
+    roshan_kills: int = 0
+    tower_kills: int = 0
 
 
 class MatchCreate(BaseModel):
@@ -66,6 +76,18 @@ class MatchPlayer(BaseModel):
     hero_healing: int = 0
     level: int = 0
     items_json: str = "[]"
+    won: bool = False
+    role: str | None = None
+    obs_wards_placed: int = 0
+    sentry_wards_placed: int = 0
+    wards_destroyed: int = 0
+    camps_stacked: int = 0
+    stun_duration: float = 0
+    damage_taken: int = 0
+    gold_spent_support: int = 0
+    rune_pickups: int = 0
+    roshan_kills: int = 0
+    tower_kills: int = 0
 
     @property
     def final_items(self) -> list[str]:
@@ -75,8 +97,6 @@ class MatchPlayer(BaseModel):
             return json.loads(self.items_json)
         except (json.JSONDecodeError, TypeError):
             return []
-
-    won: bool = False
 
     @property
     def kda(self) -> str:

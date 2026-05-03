@@ -14,18 +14,26 @@
     <td><div class="items-cell"><div class="items-slots">{% for item in reg_items %}<img src="{{ item | item_icon }}" class="item-icon" alt="{{ item }}" title="{{ item.replace('_', ' ') }}">{% endfor %}</div><svg class="aghs-badge" width="22" height="28" viewBox="0 0 22 28" title="Scepter: {{ 'Yes' if aghs.get('scepter') else 'No' }} / Shard: {{ 'Yes' if aghs.get('shard') else 'No' }}"><path class="aghs-top {% if aghs.get('scepter') %}aghs-on{% endif %}" d="M11 1 C11 1 5 4 5 9 C5 12 8 14 11 14 C14 14 17 12 17 9 C17 4 11 1 11 1 Z M9 7 L11 3 L13 7 L11 6 Z"/><path class="aghs-bot {% if aghs.get('shard') %}aghs-on{% endif %}" d="M4 17 C3 17 2 18 2 19.5 C2 21 3 22 4 22 C5 22 6 21 6 19.5 C6 18 5 17 4 17 Z M11 17 C10 17 9 18.5 9 20 C9 21.5 10 23 11 23 C12 23 13 21.5 13 20 C13 18.5 12 17 11 17 Z M18 17 C17 17 16 18 16 19.5 C16 21 17 22 18 22 C19 22 20 21 20 19.5 C20 18 19 17 18 17 Z"/></svg>{% if neutral_item %}<img src="{{ neutral_item | item_icon }}" class="item-neutral" alt="{{ neutral_item }}" title="{{ neutral_item.replace('_', ' ') }}">{% endif %}</div></td>
     <td id="claim-{{ p.slot }}">
         {% if p.player_id %}
-            <a href="/players/{{ p.player_id }}">{{ p.player_name }}</a>
+            <a href="/players/{{ p.player_id }}">{{ p.player_name }}</a>{% if p.role %}<span class="text-xs text-muted" style="margin-left:4px;">{{ p.role }}</span>{% endif %}
         {% elif is_admin %}
             <form hx-post="/api/matches/{{ match.id }}/claim" hx-target="#claim-{{ p.slot }}" hx-swap="innerHTML"
                   class="flex gap-1 items-center" style="display:inline-flex;">
                 <input type="hidden" name="slot" value="{{ p.slot }}">
                 <select name="player_id" class="form-input claim-select" style="width:auto;padding:0.2rem 0.4rem;font-size:0.75rem;" required>
-                    <option value="">Reclamar...</option>
+                    <option value="">Jugador...</option>
                     {% for pl in players %}
                     {% if pl.id not in claimed_ids %}
                     <option value="{{ pl.id }}">{{ pl.display_name }}</option>
                     {% endif %}
                     {% endfor %}
+                </select>
+                <select name="role" class="form-input" style="width:auto;padding:0.2rem 0.4rem;font-size:0.75rem;">
+                    <option value="">Rol</option>
+                    <option value="pos1">Pos 1</option>
+                    <option value="pos2">Pos 2</option>
+                    <option value="pos3">Pos 3</option>
+                    <option value="pos4">Pos 4</option>
+                    <option value="pos5">Pos 5</option>
                 </select>
                 <button type="submit" class="btn btn-primary btn-sm">OK</button>
             </form>

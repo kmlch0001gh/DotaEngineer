@@ -60,10 +60,13 @@ def create_match(data: MatchCreate, con: Connection) -> int:
         con.execute(
             """
             INSERT INTO match_players (match_id, slot, hero_id, hero_name, team,
-                                       kills, deaths, assists, last_hits, denies,
-                                       gpm, xpm, net_worth, hero_damage, tower_damage,
-                                       hero_healing, level, items_json, won)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                kills, deaths, assists, last_hits, denies,
+                gpm, xpm, net_worth, hero_damage, tower_damage,
+                hero_healing, level, items_json, won,
+                obs_wards_placed, sentry_wards_placed, wards_destroyed,
+                camps_stacked, stun_duration, damage_taken,
+                gold_spent_support, rune_pickups, roshan_kills, tower_kills)
+            VALUES (?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?, ?,?,?,?,?,?,?,?,?,?)
             """,
             [
                 match_id,
@@ -85,6 +88,16 @@ def create_match(data: MatchCreate, con: Connection) -> int:
                 p.level,
                 items_json,
                 won,
+                p.obs_wards_placed,
+                p.sentry_wards_placed,
+                p.wards_destroyed,
+                p.camps_stacked,
+                p.stun_duration,
+                p.damage_taken,
+                p.gold_spent_support,
+                p.rune_pickups,
+                p.roshan_kills,
+                p.tower_kills,
             ],
         )
 

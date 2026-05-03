@@ -11,6 +11,7 @@ from dotaengineer.services import (
     leaderboard_service,
     match_service,
     player_service,
+    role_service,
 )
 
 router = APIRouter(tags=["pages"])
@@ -22,6 +23,7 @@ def home(request: Request, con: Connection = Depends(get_db)):
     leaderboard = leaderboard_service.get_leaderboard(con, limit=5)
     top_picks = leaderboard_service.get_top_heroes_picked(con, limit=5)
     top_bans = leaderboard_service.get_top_heroes_banned(con, limit=5)
+    best_roles = role_service.get_best_per_role(con, limit=1)
     matches, _ = match_service.list_matches(page=1, per_page=5, con=con)
     return templates.TemplateResponse(
         request,
@@ -31,6 +33,7 @@ def home(request: Request, con: Connection = Depends(get_db)):
             "leaderboard": leaderboard,
             "top_picks": top_picks,
             "top_bans": top_bans,
+            "best_roles": best_roles,
             "matches": matches,
         },
     )
@@ -138,6 +141,7 @@ def player_profile(
     recent_matches = player_service.get_player_recent_matches(player_id, limit=20, con=con)
     mmr_history = leaderboard_service.get_mmr_history(player_id, con)
     mmr_by_match = {h["match_id"]: h["mmr_change"] for h in mmr_history}
+    role_stats = role_service.get_player_role_stats(player_id, con)
     return templates.TemplateResponse(
         request,
         "players/profile.html",
@@ -146,6 +150,7 @@ def player_profile(
             "recent_matches": recent_matches,
             "mmr_history": mmr_history,
             "mmr_by_match": mmr_by_match,
+            "role_stats": role_stats,
         },
     )
 

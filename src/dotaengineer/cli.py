@@ -211,6 +211,53 @@ def setup_parser():
     console.print("Replay parsing will now include full stats (KDA, GPM, damage).")
 
 
+@app.command("parse-new")
+def parse_new_replays(
+    replay_dir: str = typer.Argument("data/replays", help="Directory with .dem replay files"),
+):
+    """Parse only NEW replays that aren't already in the database."""
+    from dotaengineer.db import get_connection, release_connection
+    from dotaengineer.replay.parser import parse_replay
+    from dotaengineer.services.match_service import create_match, get_match
+
+    directory = Path(replay_dir)
+    if not directory.exists():
+        console.print(f"[bold red]Directory not found: {directory}[/]")
+        raise typer.Exit(1)
+
+    con = get_connection()
+    existing = set()
+    for (rf,) in con.execute("SELECT replay_file FROM matches").fetchall():
+        if rf:
+            existing.add(rf)
+
+    dems = sorted(directory.glob("*.dem"))
+    new_count = 0
+
+    for path in dems:
+        if str(path) in existing:
+            console.print(f"[dim]SKIP {path.name}[/]")
+            continue
+
+        console.print(f"[bold]PARSING {path.name}...[/]")
+        result = parse_replay(path)
+        if not result:
+            console.print("  [red]FAILED[/]")
+            continue
+
+        mid = create_match(result, con)
+        m = get_match(mid, con)
+        w = "Radiant" if m.radiant_win else "Dire"
+        console.print(
+            f"  [green]Match #{mid}[/] — {w} Win "
+            f"{m.radiant_score}-{m.dire_score} — {m.duration_display}"
+        )
+        new_count += 1
+
+    release_connection(con)
+    console.print(f"\n[bold green]{new_count} new, {len(existing)} skipped.[/]")
+
+
 @app.command("parse")
 def parse_replay_cmd(
     replay_file: str = typer.Argument(..., help="Path to .dem replay file"),

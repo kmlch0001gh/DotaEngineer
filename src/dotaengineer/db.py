@@ -72,6 +72,17 @@ CREATE TABLE IF NOT EXISTS match_players (
     level           INTEGER DEFAULT 0,
     items_json      VARCHAR DEFAULT '[]',
     won             BOOLEAN NOT NULL,
+    role            VARCHAR,
+    obs_wards_placed INTEGER DEFAULT 0,
+    sentry_wards_placed INTEGER DEFAULT 0,
+    wards_destroyed INTEGER DEFAULT 0,
+    camps_stacked   INTEGER DEFAULT 0,
+    stun_duration   REAL DEFAULT 0,
+    damage_taken    INTEGER DEFAULT 0,
+    gold_spent_support INTEGER DEFAULT 0,
+    rune_pickups    INTEGER DEFAULT 0,
+    roshan_kills    INTEGER DEFAULT 0,
+    tower_kills     INTEGER DEFAULT 0,
     UNIQUE(match_id, slot)
 );
 

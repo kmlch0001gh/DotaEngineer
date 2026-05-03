@@ -18,6 +18,7 @@ def claim_slot(
     match_id: int,
     player_id: int = Form(...),
     slot: int = Form(...),
+    role: str = Form(""),
     con: Connection = Depends(get_db),
 ):
     """Claim a hero slot in a match (admin only)."""
@@ -29,6 +30,13 @@ def claim_slot(
         )
 
     success = match_service.claim_slot(match_id, slot, player_id, con)
+
+    # Save role if provided
+    if success and role:
+        con.execute(
+            "UPDATE match_players SET role = ? WHERE match_id = ? AND slot = ?",
+            [role, match_id, slot],
+        )
     if not success:
         return templates.TemplateResponse(
             request,

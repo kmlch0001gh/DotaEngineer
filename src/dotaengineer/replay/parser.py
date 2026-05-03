@@ -145,6 +145,16 @@ def _java_json_to_match(data: dict, replay_path: Path) -> MatchCreate:
                 tower_damage=p.get("tower_damage", 0),
                 hero_healing=p.get("hero_healing", 0),
                 level=p.get("level", 0),
+                obs_wards_placed=p.get("obs_wards_placed", 0),
+                sentry_wards_placed=p.get("sentry_wards_placed", 0),
+                wards_destroyed=p.get("wards_destroyed", 0),
+                camps_stacked=p.get("camps_stacked", 0),
+                stun_duration=p.get("stun_duration", 0),
+                damage_taken=p.get("damage_taken", 0),
+                gold_spent_support=p.get("gold_spent_support", 0),
+                rune_pickups=p.get("rune_pickups", 0),
+                roshan_kills=p.get("roshan_kills", 0),
+                tower_kills=p.get("tower_kills", 0),
             )
         )
 
