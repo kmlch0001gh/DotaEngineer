@@ -63,13 +63,13 @@
         <div style="display:flex;align-items:center;gap:12px;">
             <span class="num" style="font-family:var(--serif);font-size:22px;min-width:70px;text-align:right;color:{% if higher_better == true %}{% if v1 > v2 %}var(--emerald-soft){% elif v1 < v2 %}var(--ink-3){% else %}var(--ink-1){% endif %}{% else %}var(--ink-1){% endif %};">{{ v1 }}</span>
             <div style="flex:1;position:relative;height:6px;background:var(--bg-3);">
-                <div style="position:absolute;right:0;top:0;bottom:0;width:{% if higher_better == true and v1 > 0 %}70{% else %}50{% endif %}%;background:linear-gradient(270deg,var(--emerald-deep),var(--emerald-soft));"></div>
+                <div style="position:absolute;right:0;top:0;bottom:0;width:50%;background:linear-gradient(270deg,var(--emerald-deep),var(--emerald-soft));"></div>
             </div>
         </div>
         <div style="text-align:center;font-family:var(--mono);font-size:11px;letter-spacing:0.18em;color:var(--ink-3);text-transform:uppercase;">{{ label }}</div>
         <div style="display:flex;align-items:center;gap:12px;">
             <div style="flex:1;position:relative;height:6px;background:var(--bg-3);">
-                <div style="position:absolute;left:0;top:0;bottom:0;width:{% if higher_better == true and v2 > 0 %}70{% else %}50{% endif %}%;background:linear-gradient(90deg,var(--crimson),#ffaaa0);"></div>
+                <div style="position:absolute;left:0;top:0;bottom:0;width:50%;background:linear-gradient(90deg,var(--crimson),#ffaaa0);"></div>
             </div>
             <span class="num" style="font-family:var(--serif);font-size:22px;min-width:70px;color:{% if higher_better == true %}{% if v2 > v1 %}#ffaaa0{% elif v2 < v1 %}var(--ink-3){% else %}var(--ink-1){% endif %}{% else %}var(--ink-1){% endif %};">{{ v2 }}</span>
         </div>
