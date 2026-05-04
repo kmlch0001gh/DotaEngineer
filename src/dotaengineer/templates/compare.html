@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+{% block title %}Comparar Jugadores — {{ cafe_name }}{% endblock %}
+
+{% block content %}
+<h1 class="page-title mb-4">Comparar Jugadores</h1>
+
+<!-- Player Selection -->
+<div class="card mb-4">
+    <form method="get" action="/compare" id="compare-form">
+        <div class="grid grid-2 mb-3">
+            <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">Jugador 1</label>
+                <select name="p1" class="form-input" required id="sel-p1">
+                    <option value="">Seleccionar...</option>
+                    {% for p in players %}
+                    <option value="{{ p.id }}" {% if p1_id == p.id %}selected{% endif %}>
+                        {{ p.display_name }} ({{ p.mmr }} MMR)
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">Jugador 2</label>
+                <select name="p2" class="form-input" required id="sel-p2">
+                    <option value="">Seleccionar...</option>
+                    {% for p in players %}
+                    <option value="{{ p.id }}" {% if p2_id == p.id %}selected{% endif %}>
+                        {{ p.display_name }} ({{ p.mmr }} MMR)
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Comparar</button>
+    </form>
+</div>
+
+{% if stats1 and stats2 %}
+{% set p1 = stats1.player %}
+{% set p2 = stats2.player %}
+
+<!-- Player Names Header -->
+<div class="flex justify-between items-center mb-4" style="padding:0 0.5rem;">
+    <div class="flex items-center gap-2">
+        <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--radiant);"></span>
+        <a href="/players/{{ p1.id }}" class="font-bold">{{ p1.display_name }}</a>
+    </div>
+    <div class="flex items-center gap-2">
+        <a href="/players/{{ p2.id }}" class="font-bold">{{ p2.display_name }}</a>
+        <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--info);"></span>
+    </div>
+</div>
+
+<!-- Stats Generales -->
+<div class="card mb-4">
+    <div class="card-header">Stats Generales</div>
+    {% for label, v1, v2, higher_better in metrics %}
+    <div class="flex items-center" style="padding:0.5rem 0;{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}">
+        <div style="flex:1;text-align:right;" class="font-mono font-bold
+            {% if higher_better == true %}{% if v1 > v2 %}win{% elif v1 < v2 %}text-muted{% endif %}{% endif %}">
+            {{ v1 }}
+        </div>
+        <div style="flex:0 0 130px;text-align:center;" class="text-xs text-secondary">{{ label }}</div>
+        <div style="flex:1;text-align:left;" class="font-mono font-bold
+            {% if higher_better == true %}{% if v2 > v1 %}win{% elif v2 < v1 %}text-muted{% endif %}{% endif %}">
+            {{ v2 }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Rendimiento por Rol -->
+{% set role_names = {'pos1': 'Carry', 'pos2': 'Mid', 'pos3': 'Offlane', 'pos4': 'Support', 'pos5': 'Hard Supp'} %}
+<div class="card mb-4">
+    <div class="card-header">Rendimiento por Rol</div>
+    {% for role_key in ['pos1', 'pos2', 'pos3', 'pos4', 'pos5'] %}
+    {% set r1 = roles1.get(role_key) %}
+    {% set r2 = roles2.get(role_key) %}
+    {% set s1 = r1.avg_score if r1 else 0 %}
+    {% set s2 = r2.avg_score if r2 else 0 %}
+    {% set g1 = r1.games if r1 else 0 %}
+    {% set g2 = r2.games if r2 else 0 %}
+    <div style="margin-bottom:0.75rem;">
+        <div class="text-xs text-muted mb-1 text-center">{{ role_names[role_key] }}</div>
+        <div class="flex gap-2 items-center">
+            <span class="text-xs font-mono" style="width:35px;text-align:right;color:var(--radiant);">{{ s1 if g1 > 0 else '—' }}</span>
+            <div style="flex:1;display:flex;height:16px;gap:2px;">
+                <!-- P1 bar: right-aligned -->
+                <div style="flex:1;background:var(--bg-secondary);border-radius:4px;overflow:hidden;display:flex;justify-content:flex-end;">
+                    <div style="width:{{ s1 }}%;height:100%;background:var(--radiant);border-radius:4px;opacity:0.8;"></div>
+                </div>
+                <!-- P2 bar: left-aligned -->
+                <div style="flex:1;background:var(--bg-secondary);border-radius:4px;overflow:hidden;">
+                    <div style="width:{{ s2 }}%;height:100%;background:var(--info);border-radius:4px;opacity:0.8;"></div>
+                </div>
+            </div>
+            <span class="text-xs font-mono" style="width:35px;text-align:left;color:var(--info);">{{ s2 if g2 > 0 else '—' }}</span>
+        </div>
+        <div class="flex justify-between text-xs text-muted" style="padding:0 40px;">
+            <span>{{ g1 }} partida{{ 's' if g1 != 1 else '' }}</span>
+            <span>{{ g2 }} partida{{ 's' if g2 != 1 else '' }}</span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Heroes en Comun -->
+<div class="card mb-4">
+    <div class="card-header">Heroes en Comun</div>
+    {% if shared_heroes %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Hero</th>
+                    <th colspan="3" style="text-align:center;color:var(--radiant);">{{ p1.display_name }}</th>
+                    <th colspan="3" style="text-align:center;color:var(--info);">{{ p2.display_name }}</th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th>Games</th><th>WR</th><th>KDA</th>
+                    <th>Games</th><th>WR</th><th>KDA</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in shared_heroes %}
+                {% set wr1 = h.p1.win_rate * 100 %}
+                {% set wr2 = h.p2.win_rate * 100 %}
+                <tr>
+                    <td>
+                        <div class="hero-cell">
+                            <img src="{{ h.hero_id | hero_icon }}" class="hero-icon" alt="{{ h.hero_name }}">
+                            <span class="text-sm">{{ h.hero_name }}</span>
+                        </div>
+                    </td>
+                    <td class="font-mono">{{ h.p1.games }}</td>
+                    <td class="font-mono {% if wr1 >= wr2 and wr1 > 0 %}win{% elif wr1 < wr2 %}text-muted{% endif %}">{{ h.p1.win_rate_pct }}</td>
+                    <td class="font-mono">{{ h.p1.avg_kills }}/{{ h.p1.avg_deaths }}/{{ h.p1.avg_assists }}</td>
+                    <td class="font-mono">{{ h.p2.games }}</td>
+                    <td class="font-mono {% if wr2 >= wr1 and wr2 > 0 %}win{% elif wr2 < wr1 %}text-muted{% endif %}">{{ h.p2.win_rate_pct }}</td>
+                    <td class="font-mono">{{ h.p2.avg_kills }}/{{ h.p2.avg_deaths }}/{{ h.p2.avg_assists }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted text-sm">No comparten heroes en comun.</p>
+    {% endif %}
+</div>
+
+<!-- MMR History Chart -->
+{% if mmr1 or mmr2 %}
+<div class="card mb-4">
+    <div class="card-header">Historial MMR</div>
+    <!-- Legend -->
+    <div class="flex gap-4 mb-3 text-sm">
+        <div class="flex items-center gap-1">
+            <span style="display:inline-block;width:12px;height:3px;background:var(--radiant);border-radius:2px;"></span>
+            {{ p1.display_name }}
+        </div>
+        <div class="flex items-center gap-1">
+            <span style="display:inline-block;width:12px;height:3px;background:var(--info);border-radius:2px;"></span>
+            {{ p2.display_name }}
+        </div>
+    </div>
+
+    {% set ns = namespace(y_min=9999, y_max=0, t_min=none, t_max=none) %}
+
+    {# Collect all MMR values for Y range #}
+    {% for h in mmr1 %}
+        {% if h.mmr_after < ns.y_min %}{% set ns.y_min = h.mmr_after %}{% endif %}
+        {% if h.mmr_after > ns.y_max %}{% set ns.y_max = h.mmr_after %}{% endif %}
+        {% if h.mmr_before < ns.y_min %}{% set ns.y_min = h.mmr_before %}{% endif %}
+        {% if h.mmr_before > ns.y_max %}{% set ns.y_max = h.mmr_before %}{% endif %}
+    {% endfor %}
+    {% for h in mmr2 %}
+        {% if h.mmr_after < ns.y_min %}{% set ns.y_min = h.mmr_after %}{% endif %}
+        {% if h.mmr_after > ns.y_max %}{% set ns.y_max = h.mmr_after %}{% endif %}
+        {% if h.mmr_before < ns.y_min %}{% set ns.y_min = h.mmr_before %}{% endif %}
+        {% if h.mmr_before > ns.y_max %}{% set ns.y_max = h.mmr_before %}{% endif %}
+    {% endfor %}
+
+    {% set total_points = (mmr1|length) + (mmr2|length) %}
+    {% set max_points = [mmr1|length, mmr2|length] | max %}
+
+    {% if ns.y_min == ns.y_max %}
+        {% set ns.y_min = ns.y_min - 50 %}
+        {% set ns.y_max = ns.y_max + 50 %}
+    {% endif %}
+
+    {% set pad = ((ns.y_max - ns.y_min) * 0.1) | int %}
+    {% if pad < 20 %}{% set pad = 20 %}{% endif %}
+    {% set y_lo = ns.y_min - pad %}
+    {% set y_hi = ns.y_max + pad %}
+    {% set y_range = y_hi - y_lo %}
+
+    {% set svg_w = 700 %}
+    {% set svg_h = 220 %}
+    {% set margin_l = 45 %}
+    {% set margin_r = 15 %}
+    {% set margin_t = 15 %}
+    {% set margin_b = 25 %}
+    {% set chart_w = svg_w - margin_l - margin_r %}
+    {% set chart_h = svg_h - margin_t - margin_b %}
+
+    <svg viewBox="0 0 {{ svg_w }} {{ svg_h }}" style="width:100%;height:auto;display:block;">
+        <!-- Y-axis labels -->
+        {% for i in range(5) %}
+            {% set val = y_lo + (y_range * i / 4) %}
+            {% set y = margin_t + chart_h - (chart_h * i / 4) %}
+            <text x="{{ margin_l - 5 }}" y="{{ y + 4 }}" text-anchor="end" fill="#64748b" font-size="10" font-family="monospace">{{ val|int }}</text>
+            <line x1="{{ margin_l }}" y1="{{ y }}" x2="{{ svg_w - margin_r }}" y2="{{ y }}" stroke="#334155" stroke-width="0.5" />
+        {% endfor %}
+
+        <!-- 1000 baseline -->
+        {% if y_lo <= 1000 and y_hi >= 1000 %}
+            {% set base_y = margin_t + chart_h - (chart_h * (1000 - y_lo) / y_range) %}
+            <line x1="{{ margin_l }}" y1="{{ base_y }}" x2="{{ svg_w - margin_r }}" y2="{{ base_y }}" stroke="#94a3b8" stroke-width="0.5" stroke-dasharray="4,4" />
+        {% endif %}
+
+        <!-- Player 1 line (green) -->
+        {% if mmr1|length > 0 %}
+            {% set pts1 = [] %}
+            {% for h in mmr1 %}
+                {% set x = margin_l + (chart_w * loop.index0 / ([mmr1|length - 1, 1] | max)) %}
+                {% set y = margin_t + chart_h - (chart_h * (h.mmr_after - y_lo) / y_range) %}
+                {% set _ = pts1.append(x|string ~ "," ~ y|string) %}
+            {% endfor %}
+            <polyline points="{{ pts1|join(' ') }}" fill="none" stroke="#4ade80" stroke-width="2" stroke-linejoin="round" />
+            {% for h in mmr1 %}
+                {% set x = margin_l + (chart_w * loop.index0 / ([mmr1|length - 1, 1] | max)) %}
+                {% set y = margin_t + chart_h - (chart_h * (h.mmr_after - y_lo) / y_range) %}
+                <circle cx="{{ x }}" cy="{{ y }}" r="3.5" fill="#4ade80" stroke="var(--bg-card)" stroke-width="1.5">
+                    <title>{{ p1.display_name }}: {{ h.mmr_after }} MMR ({{ '+' if h.mmr_change >= 0 }}{{ h.mmr_change }})</title>
+                </circle>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Player 2 line (blue) -->
+        {% if mmr2|length > 0 %}
+            {% set pts2 = [] %}
+            {% for h in mmr2 %}
+                {% set x = margin_l + (chart_w * loop.index0 / ([mmr2|length - 1, 1] | max)) %}
+                {% set y = margin_t + chart_h - (chart_h * (h.mmr_after - y_lo) / y_range) %}
+                {% set _ = pts2.append(x|string ~ "," ~ y|string) %}
+            {% endfor %}
+            <polyline points="{{ pts2|join(' ') }}" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round" />
+            {% for h in mmr2 %}
+                {% set x = margin_l + (chart_w * loop.index0 / ([mmr2|length - 1, 1] | max)) %}
+                {% set y = margin_t + chart_h - (chart_h * (h.mmr_after - y_lo) / y_range) %}
+                <circle cx="{{ x }}" cy="{{ y }}" r="3.5" fill="#3b82f6" stroke="var(--bg-card)" stroke-width="1.5">
+                    <title>{{ p2.display_name }}: {{ h.mmr_after }} MMR ({{ '+' if h.mmr_change >= 0 }}{{ h.mmr_change }})</title>
+                </circle>
+            {% endfor %}
+        {% endif %}
+    </svg>
+</div>
+{% endif %}
+
+{% elif p1_id and not p2_id %}
+<div class="card">
+    <p class="text-muted text-sm">Selecciona un segundo jugador para comparar.</p>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('compare-form').addEventListener('submit', function(e) {
+    var p1 = document.getElementById('sel-p1').value;
+    var p2 = document.getElementById('sel-p2').value;
+    if (p1 && p2 && p1 === p2) {
+        e.preventDefault();
+        alert('Selecciona dos jugadores diferentes.');
+    }
+});
+</script>
+{% endblock %}

@@ -390,6 +390,7 @@
                 <a href="/players" class="nav-link {% if '/players' in request.url.path and '/register' not in request.url.path %}active{% endif %}">Jugadores</a>
                 <a href="/leaderboard" class="nav-link {% if '/leaderboard' in request.url.path %}active{% endif %}">Ranking</a>
                 <a href="/balance" class="nav-link {% if '/balance' in request.url.path %}active{% endif %}">Balance</a>
+                <a href="/compare" class="nav-link {% if '/compare' in request.url.path %}active{% endif %}">Comparar</a>
                 {% if is_admin %}
                 <a href="/logout" class="nav-link" style="color:var(--error);">Salir Admin</a>
                 {% endif %}

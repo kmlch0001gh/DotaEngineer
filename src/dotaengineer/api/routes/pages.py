@@ -179,3 +179,75 @@ def balance_page(
         "leaderboard/balance.html",
         {"players": players},
     )
+
+
+@router.get("/compare", response_class=HTMLResponse)
+def compare_page(
+    request: Request,
+    p1: int | None = Query(None),
+    p2: int | None = Query(None),
+    con: Connection = Depends(get_db),
+):
+    players = player_service.list_players(con)
+    ctx: dict = {"players": players, "p1_id": p1, "p2_id": p2}
+
+    if p1 and p2 and p1 != p2:
+        stats1 = player_service.get_player_stats(p1, con)
+        stats2 = player_service.get_player_stats(p2, con)
+        if not stats1 or not stats2:
+            return templates.TemplateResponse(
+                request,
+                "error.html",
+                {"message": "Jugador no encontrado", "code": 404},
+                status_code=404,
+            )
+
+        # Role stats as dicts keyed by role
+        roles1_list = role_service.get_player_role_stats(p1, con)
+        roles2_list = role_service.get_player_role_stats(p2, con)
+        roles1 = {r["role"]: r for r in roles1_list}
+        roles2 = {r["role"]: r for r in roles2_list}
+
+        # MMR history
+        mmr1 = leaderboard_service.get_mmr_history(p1, con)
+        mmr2 = leaderboard_service.get_mmr_history(p2, con)
+
+        # Shared heroes
+        heroes1 = {h.hero_id: h for h in stats1.hero_breakdown}
+        heroes2 = {h.hero_id: h for h in stats2.hero_breakdown}
+        shared_ids = set(heroes1) & set(heroes2)
+        shared_heroes = [
+            {"hero_id": hid, "hero_name": heroes1[hid].hero_name,
+             "p1": heroes1[hid], "p2": heroes2[hid]}
+            for hid in shared_ids
+        ]
+        shared_heroes.sort(key=lambda x: x["p1"].games + x["p2"].games, reverse=True)
+
+        # Head-to-head metrics: (label, v1, v2, higher_is_better)
+        p1p, p2p = stats1.player, stats2.player
+        d1 = max(stats1.avg_deaths, 1)
+        d2 = max(stats2.avg_deaths, 1)
+        kda1 = round((stats1.avg_kills + stats1.avg_assists) / d1, 2)
+        kda2 = round((stats2.avg_kills + stats2.avg_assists) / d2, 2)
+        metrics = [
+            ("MMR", p1p.mmr, p2p.mmr, True),
+            ("Win Rate", f"{p1p.win_rate * 100:.1f}%", f"{p2p.win_rate * 100:.1f}%", True),
+            ("KDA Ratio", kda1, kda2, True),
+            ("GPM", int(stats1.avg_gpm), int(stats2.avg_gpm), True),
+            ("Racha Actual", stats1.current_streak, stats2.current_streak, True),
+            ("Mejor Racha", stats1.best_win_streak, stats2.best_win_streak, True),
+            ("Partidas", p1p.games_played, p2p.games_played, None),
+        ]
+
+        ctx.update({
+            "stats1": stats1,
+            "stats2": stats2,
+            "roles1": roles1,
+            "roles2": roles2,
+            "mmr1": mmr1,
+            "mmr2": mmr2,
+            "shared_heroes": shared_heroes,
+            "metrics": metrics,
+        })
+
+    return templates.TemplateResponse(request, "compare.html", ctx)
