@@ -135,18 +135,15 @@
     <div class="rune-card" style="padding:16px;">
         <div class="eyebrow" style="font-size:10px;margin-bottom:12px;color:var(--emerald);">{{ role_names[role_key] }}</div>
         {% if players_list %}
-        <table class="arcane">
-            <thead><tr><th>#</th><th>Jugador</th><th style="text-align:right;">Pts</th></tr></thead>
-            <tbody>
-                {% for bp in players_list %}
-                <tr>
-                    <td class="num" style="color:var(--ink-3);font-size:12px;">{{ loop.index }}</td>
-                    <td style="font-size:13px;"><a href="/players/{{ bp.player_id }}">{{ bp.display_name }}</a></td>
-                    <td class="num" style="text-align:right;color:var(--emerald-soft);font-size:13px;">{{ bp.avg_score }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+            {% for bp in players_list %}
+            <a href="/players/{{ bp.player_id }}" style="display:flex;align-items:center;gap:8px;padding:4px 0;text-decoration:none;border-bottom:1px solid var(--line);">
+                <span class="num" style="font-size:11px;color:var(--ink-3);width:16px;">{{ loop.index }}</span>
+                <span style="flex:1;font-size:13px;color:var(--ink-0);">{{ bp.display_name }}</span>
+                <span class="num" style="font-size:12px;color:var(--emerald-soft);">{{ bp.avg_score }}</span>
+            </a>
+            {% endfor %}
+        </div>
         {% else %}
         <p style="color:var(--ink-3);font-size:12px;">—</p>
         {% endif %}
