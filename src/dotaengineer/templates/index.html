@@ -119,7 +119,7 @@
 {% set role_names = {'pos1': 'Carry', 'pos2': 'Mid', 'pos3': 'Offlane', 'pos4': 'Support', 'pos5': 'Hard Support'} %}
 {% set any_roles = best_roles.values() | select | list %}
 {% if any_roles %}
-<div class="grid grid-3 mb-4" style="grid-template-columns: repeat(5, 1fr);">
+<div class="grid grid-roles mb-4">
     {% for role_key in ['pos1', 'pos2', 'pos3', 'pos4', 'pos5'] %}
     {% set players_list = best_roles.get(role_key, []) %}
     <div class="card" style="padding:0.75rem;">

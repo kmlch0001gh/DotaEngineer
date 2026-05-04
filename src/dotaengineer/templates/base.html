@@ -367,9 +367,15 @@
         .w-full { width: 100%; }
 
         /* Mobile bottom nav */
+        /* Roles grid: 5 columns on desktop, 2 on tablet, 1 on mobile */
+        .grid-roles { grid-template-columns: repeat(5, 1fr); }
+        @media (max-width: 1024px) {
+            .grid-roles { grid-template-columns: repeat(3, 1fr); }
+        }
         @media (max-width: 640px) {
             .nav { flex-wrap: wrap; }
             .main { padding: 0.75rem; }
+            .grid-roles { grid-template-columns: 1fr; }
         }
     </style>
     {% block head %}{% endblock %}
