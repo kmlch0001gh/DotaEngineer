@@ -1,3 +1,12 @@
+---
+title: DotaCafe
+emoji: ⚔️
+colorFrom: yellow
+colorTo: red
+sdk: docker
+app_port: 7860
+---
+
 # DotaEngineer
 
 Data engineering and analysis platform for **high-MMR Dota 2 decision-making**.
