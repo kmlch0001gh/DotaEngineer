@@ -378,6 +378,93 @@ def backfill_bans_cmd(
     console.print(f"[bold green]Done. {total} bans added total.[/]")
 
 
+@app.command("backfill-achievements")
+def backfill_achievements_cmd(
+    replay_dir: str = typer.Argument("data/replays", help="Directory with .dem replay files"),
+):
+    """Backfill multi-kills, kill streaks, courier/tormentor kills for existing matches.
+
+    Reparses each replay file, finds the matching match in the DB by replay_file,
+    and updates only the achievement columns. Does NOT modify KDA, items, claims, or ELO.
+    Safe to run multiple times — overwrites achievement columns with fresh data.
+    """
+    from dotaengineer.db import get_connection, release_connection
+    from dotaengineer.replay.parser import parse_replay
+
+    replay_path = Path(replay_dir)
+    if not replay_path.exists():
+        console.print(f"[bold red]Directory not found: {replay_path}[/]")
+        raise typer.Exit(1)
+
+    files = sorted(replay_path.glob("*.dem"))
+    if not files:
+        console.print("[bold red]No .dem files found.[/]")
+        raise typer.Exit(1)
+
+    console.print(f"[bold]Scanning {len(files)} replays for achievements...[/]")
+
+    con = get_connection()
+    updated = 0
+    for f in files:
+        result = parse_replay(f.resolve())
+        if not result:
+            continue
+
+        # Find match by replay_file name (compare filenames only)
+        rows = con.execute(
+            "SELECT id, replay_file FROM matches WHERE replay_file IS NOT NULL",
+        ).fetchall()
+
+        match_id = None
+        for row in rows:
+            if row[1] and Path(row[1]).name == f.name:
+                match_id = row[0]
+                break
+
+        if not match_id:
+            console.print(f"  [dim]{f.name}: no matching match in DB[/]")
+            continue
+
+        # Update each slot's achievement columns
+        match_updated = False
+        for p in result.players:
+            has_data = (
+                p.double_kills or p.triple_kills or p.ultra_kills or p.rampage
+                or p.killing_sprees or p.dominating or p.mega_kills
+                or p.unstoppable or p.wicked_sick or p.monster_kill
+                or p.godlike or p.beyond_godlike
+                or p.courier_kills or p.tormentor_kills
+            )
+            con.execute(
+                """UPDATE match_players SET
+                    double_kills = ?, triple_kills = ?, ultra_kills = ?, rampage = ?,
+                    killing_sprees = ?, dominating = ?, mega_kills = ?,
+                    unstoppable = ?, wicked_sick = ?, monster_kill = ?,
+                    godlike = ?, beyond_godlike = ?,
+                    courier_kills = ?, tormentor_kills = ?
+                WHERE match_id = ? AND slot = ?""",
+                [
+                    p.double_kills, p.triple_kills, p.ultra_kills, p.rampage,
+                    p.killing_sprees, p.dominating, p.mega_kills,
+                    p.unstoppable, p.wicked_sick, p.monster_kill,
+                    p.godlike, p.beyond_godlike,
+                    p.courier_kills, p.tormentor_kills,
+                    match_id, p.slot,
+                ],
+            )
+            if has_data:
+                match_updated = True
+
+        if match_updated:
+            console.print(f"  {f.name} → Match #{match_id}: achievements updated")
+            updated += 1
+        else:
+            console.print(f"  [dim]{f.name} → Match #{match_id}: no achievements found[/]")
+
+    release_connection(con)
+    console.print(f"[bold green]Done. {updated} matches updated.[/]")
+
+
 @app.command("watch")
 def watch_replays(
     dir: str = typer.Option("", help="Replay directory to watch"),
