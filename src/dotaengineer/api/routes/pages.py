@@ -23,7 +23,7 @@ def home(request: Request, con: Connection = Depends(get_db)):
     leaderboard = leaderboard_service.get_leaderboard(con, limit=5)
     top_picks = leaderboard_service.get_top_heroes_picked(con, limit=5)
     top_bans = leaderboard_service.get_top_heroes_banned(con, limit=5)
-    best_roles = role_service.get_best_per_role(con, limit=1)
+    best_roles = role_service.get_best_per_role(con, limit=5)
     matches, _ = match_service.list_matches(page=1, per_page=5, con=con)
     return templates.TemplateResponse(
         request,

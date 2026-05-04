@@ -226,21 +226,24 @@ def parse_new_replays(
         raise typer.Exit(1)
 
     con = get_connection()
-    existing = set()
+
+    # Collect existing replay filenames (not full paths) to avoid duplicates
+    existing_names = set()
     for (rf,) in con.execute("SELECT replay_file FROM matches").fetchall():
         if rf:
-            existing.add(rf)
+            existing_names.add(Path(rf).name)
 
     dems = sorted(directory.glob("*.dem"))
     new_count = 0
 
     for path in dems:
-        if str(path) in existing:
+        if path.name in existing_names:
             console.print(f"[dim]SKIP {path.name}[/]")
             continue
 
         console.print(f"[bold]PARSING {path.name}...[/]")
-        result = parse_replay(path)
+        # Resolve to absolute path for consistent storage
+        result = parse_replay(path.resolve())
         if not result:
             console.print("  [red]FAILED[/]")
             continue
@@ -255,7 +258,7 @@ def parse_new_replays(
         new_count += 1
 
     release_connection(con)
-    console.print(f"\n[bold green]{new_count} new, {len(existing)} skipped.[/]")
+    console.print(f"\n[bold green]{new_count} new, {len(existing_names)} skipped.[/]")
 
 
 @app.command("parse")
@@ -269,7 +272,7 @@ def parse_replay_cmd(
     from dotaengineer.replay.parser import parse_replay
     from dotaengineer.services.match_service import create_match
 
-    path = Path(replay_file)
+    path = Path(replay_file).resolve()
     if not path.exists():
         console.print(f"[bold red]File not found: {path}[/]")
         raise typer.Exit(1)
