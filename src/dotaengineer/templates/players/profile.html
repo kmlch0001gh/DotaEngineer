@@ -107,31 +107,31 @@
         {% if has_multikills %}
         <div>
             <div class="text-xs text-muted mb-2" style="text-transform:uppercase;">Multi-Kills</div>
-            {% if a.rampage %}<div class="flex justify-between mb-1"><span class="text-sm" style="color:#ff4500;">RAMPAGE</span><span class="font-mono font-bold" style="color:#ff4500;">{{ a.rampage }}</span></div>{% endif %}
-            {% if a.ultra_kills %}<div class="flex justify-between mb-1"><span class="text-sm" style="color:var(--dire);">Ultra Kill</span><span class="font-mono font-bold">{{ a.ultra_kills }}</span></div>{% endif %}
-            {% if a.triple_kills %}<div class="flex justify-between mb-1"><span class="text-sm" style="color:var(--accent);">Triple Kill</span><span class="font-mono font-bold">{{ a.triple_kills }}</span></div>{% endif %}
-            {% if a.double_kills %}<div class="flex justify-between mb-1"><span class="text-sm">Double Kill</span><span class="font-mono font-bold">{{ a.double_kills }}</span></div>{% endif %}
+            {% if a.rampage %}<div class="flex items-center gap-2 mb-1"><span class="text-sm" style="color:#ff4500;">RAMPAGE</span><span class="font-mono font-bold" style="color:#ff4500;">{{ a.rampage }}</span></div>{% endif %}
+            {% if a.ultra_kills %}<div class="flex items-center gap-2 mb-1"><span class="text-sm" style="color:var(--dire);">Ultra Kill</span><span class="font-mono font-bold">{{ a.ultra_kills }}</span></div>{% endif %}
+            {% if a.triple_kills %}<div class="flex items-center gap-2 mb-1"><span class="text-sm" style="color:var(--accent);">Triple Kill</span><span class="font-mono font-bold">{{ a.triple_kills }}</span></div>{% endif %}
+            {% if a.double_kills %}<div class="flex items-center gap-2 mb-1"><span class="text-sm">Double Kill</span><span class="font-mono font-bold">{{ a.double_kills }}</span></div>{% endif %}
         </div>
         {% endif %}
         {% if has_streaks %}
         <div>
             <div class="text-xs text-muted mb-2" style="text-transform:uppercase;">Rachas</div>
-            {% if a.beyond_godlike %}<div class="flex justify-between mb-1"><span class="text-sm" style="color:#ff4500;">Beyond Godlike</span><span class="font-mono font-bold" style="color:#ff4500;">{{ a.beyond_godlike }}</span></div>{% endif %}
-            {% if a.godlike %}<div class="flex justify-between mb-1"><span class="text-sm" style="color:var(--dire);">Godlike</span><span class="font-mono font-bold">{{ a.godlike }}</span></div>{% endif %}
-            {% if a.monster_kill %}<div class="flex justify-between mb-1"><span class="text-sm" style="color:var(--dire);">Monster Kill</span><span class="font-mono font-bold">{{ a.monster_kill }}</span></div>{% endif %}
-            {% if a.wicked_sick %}<div class="flex justify-between mb-1"><span class="text-sm" style="color:var(--accent);">Wicked Sick</span><span class="font-mono font-bold">{{ a.wicked_sick }}</span></div>{% endif %}
-            {% if a.unstoppable %}<div class="flex justify-between mb-1"><span class="text-sm" style="color:var(--accent);">Unstoppable</span><span class="font-mono font-bold">{{ a.unstoppable }}</span></div>{% endif %}
-            {% if a.mega_kills %}<div class="flex justify-between mb-1"><span class="text-sm">Mega Kill</span><span class="font-mono font-bold">{{ a.mega_kills }}</span></div>{% endif %}
-            {% if a.dominating %}<div class="flex justify-between mb-1"><span class="text-sm">Dominating</span><span class="font-mono font-bold">{{ a.dominating }}</span></div>{% endif %}
-            {% if a.killing_sprees %}<div class="flex justify-between mb-1"><span class="text-sm">Killing Spree</span><span class="font-mono font-bold">{{ a.killing_sprees }}</span></div>{% endif %}
+            {% if a.beyond_godlike %}<div class="flex items-center gap-2 mb-1"><span class="text-sm" style="color:#ff4500;">Beyond Godlike</span><span class="font-mono font-bold" style="color:#ff4500;">{{ a.beyond_godlike }}</span></div>{% endif %}
+            {% if a.godlike %}<div class="flex items-center gap-2 mb-1"><span class="text-sm" style="color:var(--dire);">Godlike</span><span class="font-mono font-bold">{{ a.godlike }}</span></div>{% endif %}
+            {% if a.monster_kill %}<div class="flex items-center gap-2 mb-1"><span class="text-sm" style="color:var(--dire);">Monster Kill</span><span class="font-mono font-bold">{{ a.monster_kill }}</span></div>{% endif %}
+            {% if a.wicked_sick %}<div class="flex items-center gap-2 mb-1"><span class="text-sm" style="color:var(--accent);">Wicked Sick</span><span class="font-mono font-bold">{{ a.wicked_sick }}</span></div>{% endif %}
+            {% if a.unstoppable %}<div class="flex items-center gap-2 mb-1"><span class="text-sm" style="color:var(--accent);">Unstoppable</span><span class="font-mono font-bold">{{ a.unstoppable }}</span></div>{% endif %}
+            {% if a.mega_kills %}<div class="flex items-center gap-2 mb-1"><span class="text-sm">Mega Kill</span><span class="font-mono font-bold">{{ a.mega_kills }}</span></div>{% endif %}
+            {% if a.dominating %}<div class="flex items-center gap-2 mb-1"><span class="text-sm">Dominating</span><span class="font-mono font-bold">{{ a.dominating }}</span></div>{% endif %}
+            {% if a.killing_sprees %}<div class="flex items-center gap-2 mb-1"><span class="text-sm">Killing Spree</span><span class="font-mono font-bold">{{ a.killing_sprees }}</span></div>{% endif %}
         </div>
         {% endif %}
         {% if has_objectives %}
         <div>
             <div class="text-xs text-muted mb-2" style="text-transform:uppercase;">Objetivos</div>
-            {% if a.roshan_kills %}<div class="flex justify-between mb-1"><span class="text-sm">Roshan Kills</span><span class="font-mono font-bold">{{ a.roshan_kills }}</span></div>{% endif %}
-            {% if a.tormentor_kills %}<div class="flex justify-between mb-1"><span class="text-sm">Tormentor Kills</span><span class="font-mono font-bold">{{ a.tormentor_kills }}</span></div>{% endif %}
-            {% if a.courier_kills %}<div class="flex justify-between mb-1"><span class="text-sm">Courier Kills</span><span class="font-mono font-bold">{{ a.courier_kills }}</span></div>{% endif %}
+            {% if a.roshan_kills %}<div class="flex items-center gap-2 mb-1"><span class="text-sm">Roshan Kills</span><span class="font-mono font-bold">{{ a.roshan_kills }}</span></div>{% endif %}
+            {% if a.tormentor_kills %}<div class="flex items-center gap-2 mb-1"><span class="text-sm">Tormentor Kills</span><span class="font-mono font-bold">{{ a.tormentor_kills }}</span></div>{% endif %}
+            {% if a.courier_kills %}<div class="flex items-center gap-2 mb-1"><span class="text-sm">Courier Kills</span><span class="font-mono font-bold">{{ a.courier_kills }}</span></div>{% endif %}
         </div>
         {% endif %}
     </div>
