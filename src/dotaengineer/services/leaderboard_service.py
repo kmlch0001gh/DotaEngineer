@@ -115,6 +115,47 @@ def get_top_heroes_winrate(con: Connection, limit: int = 5) -> list[dict]:
     return [dict(zip(cols, r)) for r in rows]
 
 
+def get_hero_stats(con: Connection) -> list[dict]:
+    """Get comprehensive stats for all heroes played in the cafe."""
+    total_matches = max(con.execute("SELECT count(*) FROM matches").fetchone()[0], 1)
+    rows = con.execute(
+        """
+        SELECT hero_id, hero_name,
+               count(*) as picks,
+               sum(CASE WHEN won THEN 1 ELSE 0 END) as wins,
+               round(sum(CASE WHEN won THEN 1 ELSE 0 END)::NUMERIC
+                     / count(*) * 100, 1) as win_rate,
+               round(avg((kills + assists)::NUMERIC
+                     / GREATEST(deaths, 1)), 2) as avg_kda
+        FROM match_players
+        GROUP BY hero_id, hero_name
+        ORDER BY picks DESC, win_rate DESC
+        """,
+    ).fetchall()
+    cols = [desc[0] for desc in con.description]
+
+    # Get ban counts
+    ban_rows = con.execute(
+        """
+        SELECT hero_id, count(*) as bans
+        FROM match_bans
+        GROUP BY hero_id
+        """,
+    ).fetchall()
+    ban_map = {r[0]: r[1] for r in ban_rows}
+
+    results = []
+    for r in rows:
+        d = dict(zip(cols, r))
+        d["win_rate"] = float(d["win_rate"] or 0)
+        d["avg_kda"] = float(d["avg_kda"] or 0)
+        bans = ban_map.get(d["hero_id"], 0)
+        d["bans"] = bans
+        d["ban_rate"] = round(bans / total_matches * 100, 1)
+        results.append(d)
+    return results
+
+
 def get_top_heroes_banned(con: Connection, limit: int = 5) -> list[dict]:
     """Most banned heroes in the cafe."""
     total_matches = con.execute("SELECT count(*) FROM matches").fetchone()[0]

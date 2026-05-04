@@ -181,6 +181,15 @@ def balance_page(
     )
 
 
+@router.get("/heroes", response_class=HTMLResponse)
+def heroes_page(
+    request: Request,
+    con: Connection = Depends(get_db),
+):
+    heroes = leaderboard_service.get_hero_stats(con)
+    return templates.TemplateResponse(request, "heroes.html", {"heroes": heroes})
+
+
 @router.get("/compare", response_class=HTMLResponse)
 def compare_page(
     request: Request,

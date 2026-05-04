@@ -2,41 +2,36 @@
 {% block title %}Auto-Balance — {{ cafe_name }}{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1 class="page-title">Auto-Balance de Equipos</h1>
+<div class="section-head">
+    <div class="eyebrow"><span style="color:var(--emerald);">◇</span> &nbsp; BALANCE</div>
+    <h2 class="section-title">Balance de <em>equipos</em></h2>
+    <div class="section-divider"></div>
+    <div style="color:var(--ink-2);font-family:var(--mono);font-size:12px;letter-spacing:0.08em;">Selecciona jugadores para crear equipos equilibrados</div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-header">Seleccionar Jugadores</div>
-    <p class="text-muted text-sm mb-3">
-        Selecciona los jugadores que van a jugar. El sistema creará los equipos más equilibrados posibles.
-    </p>
-
+<div class="rune-card" style="padding:24px;margin-bottom:24px;">
     <form id="balance-form" hx-post="/api/balance" hx-target="#balance-result" hx-swap="innerHTML">
         <input type="hidden" name="player_ids" id="player-ids-input">
 
-        <div class="grid grid-3 mb-4">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
             {% for p in players %}
-            <label class="card flex items-center gap-2" style="padding:0.75rem;cursor:pointer;margin-bottom:0;">
-                <input type="checkbox" class="player-checkbox" value="{{ p.id }}"
-                       onchange="updatePlayerIds()">
+            <label style="padding:12px;border:1px solid var(--line);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.2s;background:var(--bg-1);">
+                <input type="checkbox" class="player-checkbox" value="{{ p.id }}" onchange="updatePlayerIds()" style="accent-color:var(--emerald);">
                 <div style="flex:1;">
-                    <div class="font-bold text-sm">{{ p.display_name }}</div>
-                    <div class="text-xs text-muted">MMR: {{ p.mmr }} — {{ p.games_played }} games</div>
+                    <div style="font-family:var(--serif);font-size:15px;">{{ p.display_name }}</div>
+                    <div class="num" style="font-size:11px;color:var(--ink-2);">MMR: {{ p.mmr }} · {{ p.games_played }} games</div>
                 </div>
             </label>
             {% endfor %}
         </div>
 
         {% if players %}
-        <div class="flex gap-2 items-center">
-            <button type="submit" class="btn btn-primary" onclick="return updatePlayerIds()">
-                Balancear Equipos
-            </button>
-            <span class="text-muted text-sm" id="selected-count">0 jugadores seleccionados</span>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <button type="submit" class="btn btn-primary" onclick="return updatePlayerIds()">Balancear Equipos</button>
+            <span class="num" style="font-size:12px;color:var(--ink-2);" id="selected-count">0 jugadores seleccionados</span>
         </div>
         {% else %}
-        <p class="text-muted">Registra jugadores primero para usar esta herramienta.</p>
+        <p style="color:var(--ink-3);">Registra jugadores primero para usar esta herramienta.</p>
         {% endif %}
     </form>
 </div>
@@ -51,7 +46,6 @@ function updatePlayerIds() {
     const ids = Array.from(checkboxes).map(cb => cb.value);
     document.getElementById('player-ids-input').value = ids.join(',');
     document.getElementById('selected-count').textContent = ids.length + ' jugadores seleccionados';
-
     if (ids.length < 2) {
         alert('Selecciona al menos 2 jugadores');
         return false;

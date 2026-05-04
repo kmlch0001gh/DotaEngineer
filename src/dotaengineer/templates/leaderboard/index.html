@@ -2,71 +2,97 @@
 {% block title %}Ranking — {{ cafe_name }}{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1 class="page-title">Ranking</h1>
-    {% if is_admin %}
-    <form hx-post="/api/recalc-elo" hx-swap="none">
-        <button type="submit" class="btn btn-secondary btn-sm"
-                onclick="return confirm('Recalcular todo el ELO desde cero?')">
-            Recalcular ELO
-        </button>
-    </form>
-    {% endif %}
+<div class="section-head">
+    <div class="eyebrow"><span style="color:var(--emerald);">◇</span> &nbsp; LEGENDS</div>
+    <h2 class="section-title">Salón de <em>leyendas</em></h2>
+    <div class="section-divider"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div style="color:var(--ink-2);font-family:var(--mono);font-size:12px;letter-spacing:0.08em;">{{ cafe_name }} · ranking por MMR</div>
+        {% if is_admin %}
+        <form hx-post="/api/recalc-elo" hx-swap="none" style="margin:0;">
+            <button type="submit" class="btn btn-sm" onclick="return confirm('Recalcular todo el ELO desde cero?')">Recalcular ELO</button>
+        </form>
+        {% endif %}
+    </div>
 </div>
 
 {% if leaderboard %}
-<div class="card">
-    <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width:50px;">#</th>
-                    <th>Jugador</th>
-                    <th>MMR</th>
-                    <th>Partidas</th>
-                    <th>W/L</th>
-                    <th>Win Rate</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for p in leaderboard %}
-                <tr>
-                    <td>
-                        {% if p.rank == 1 %}
-                        <span style="font-size:1.25rem;">&#127942;</span>
-                        {% elif p.rank == 2 %}
-                        <span style="font-size:1.25rem;">&#129352;</span>
-                        {% elif p.rank == 3 %}
-                        <span style="font-size:1.25rem;">&#129353;</span>
-                        {% else %}
-                        <span class="font-bold text-muted">{{ p.rank }}</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="/players/{{ p.id }}" class="font-bold">{{ p.display_name }}</a>
-                        <span class="text-muted text-xs">@{{ p.username }}</span>
-                    </td>
-                    <td>
-                        <span class="font-mono font-bold text-lg" style="color:var(--accent);">{{ p.mmr }}</span>
-                    </td>
-                    <td>{{ p.games_played }}</td>
-                    <td class="font-mono">
-                        <span class="win">{{ p.wins }}</span> / <span class="loss">{{ p.losses }}</span>
-                    </td>
-                    <td>
-                        <span class="{% if p.win_rate_pct|float >= 50 %}win{% else %}loss{% endif %}">
-                            {{ p.win_rate_pct }}%
-                        </span>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<!-- Podium Top 3 -->
+{% if leaderboard|length >= 3 %}
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px;">
+    {% set podium_colors = ['var(--gold)', '#c0c0c0', '#cd7f32'] %}
+    {% for p in leaderboard[:3] %}
+    <div class="rune-card" style="padding:28px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;right:0;font-family:var(--serif);font-size:120px;line-height:1;color:{{ podium_colors[loop.index0] }};opacity:0.12;padding:0 12px;">0{{ p.rank }}</div>
+        <div style="position:relative;display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;align-items:center;gap:8px;color:{{ podium_colors[loop.index0] }};">
+                    <span style="font-size:18px;">{% if loop.index0 == 0 %}♛{% elif loop.index0 == 1 %}♕{% else %}♖{% endif %}</span>
+                    <span class="num" style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;">RANK 0{{ p.rank }}</span>
+                </div>
+            </div>
+            <h3 style="font-size:28px;line-height:1.05;">
+                <a href="/players/{{ p.id }}" style="color:var(--ink-0);text-decoration:none;">{{ p.display_name }}</a>
+            </h3>
+            <div class="num" style="font-family:var(--serif);font-size:36px;color:var(--emerald-soft);">{{ p.mmr }} <span style="font-size:12px;color:var(--ink-3);font-family:var(--mono);">MMR</span></div>
+            <div style="display:flex;gap:12px;padding-top:10px;border-top:1px solid var(--line);">
+                <div>
+                    <div class="eyebrow" style="font-size:9px;">Partidas</div>
+                    <div class="num" style="font-size:14px;color:var(--ink-1);">{{ p.games_played }}</div>
+                </div>
+                <div>
+                    <div class="eyebrow" style="font-size:9px;">Winrate</div>
+                    <div class="num" style="font-size:14px;color:var(--ink-1);">{{ p.win_rate_pct }}%</div>
+                </div>
+                <div>
+                    <div class="eyebrow" style="font-size:9px;">W/L</div>
+                    <div class="num" style="font-size:14px;"><span style="color:var(--emerald-soft);">{{ p.wins }}</span>/<span style="color:#ffaaa0;">{{ p.losses }}</span></div>
+                </div>
+            </div>
+        </div>
     </div>
+    {% endfor %}
 </div>
+{% endif %}
+
+<!-- Rest of leaderboard -->
+{% if leaderboard|length > 3 %}
+<div class="rune-card" style="padding:8px 16px;">
+    <table class="arcane">
+        <thead>
+            <tr>
+                <th>Rango</th>
+                <th>Jugador</th>
+                <th style="text-align:right;">MMR</th>
+                <th style="text-align:right;">Partidas</th>
+                <th style="text-align:right;">W/L</th>
+                <th style="text-align:right;">Winrate</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in leaderboard[3:] %}
+            <tr>
+                <td class="num" style="font-size:16px;color:var(--ink-1);font-family:var(--serif);">{{ p.rank }}</td>
+                <td style="font-family:var(--serif);font-size:16px;">
+                    <a href="/players/{{ p.id }}">{{ p.display_name }}</a>
+                    <span style="color:var(--ink-3);font-family:var(--mono);font-size:11px;margin-left:8px;">@{{ p.username }}</span>
+                </td>
+                <td class="num" style="text-align:right;font-size:14px;color:var(--emerald-soft);">{{ p.mmr }}</td>
+                <td class="num" style="text-align:right;font-size:12px;color:var(--ink-1);">{{ p.games_played }}</td>
+                <td class="num" style="text-align:right;font-size:12px;">
+                    <span style="color:var(--emerald-soft);">{{ p.wins }}</span>/<span style="color:#ffaaa0;">{{ p.losses }}</span>
+                </td>
+                <td class="num" style="text-align:right;font-size:13px;color:var(--ink-1);">{{ p.win_rate_pct }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
 {% else %}
-<div class="card text-center">
-    <p class="text-muted">El ranking aparecerá cuando se jueguen partidas y los jugadores reclamen sus slots.</p>
+<div class="rune-card" style="padding:32px;text-align:center;">
+    <p style="color:var(--ink-3);">El ranking aparecerá cuando se jueguen partidas y los jugadores reclamen sus slots.</p>
 </div>
 {% endif %}
 {% endblock %}

@@ -4,88 +4,106 @@
 {% block content %}
 {% set p = stats.player %}
 
-<!-- Player Header -->
-<div class="card mb-4">
-    <div class="flex justify-between items-center flex-wrap gap-3">
-        <div>
-            <div class="flex items-center gap-2">
-                <h1 class="page-title" id="player-name-display">{{ p.display_name }}</h1>
-                {% if is_admin %}<button class="btn btn-secondary btn-sm" onclick="document.getElementById('edit-form').style.display='block'; this.style.display='none';">Editar</button>{% endif %}
-            </div>
-            <p class="text-muted text-sm">@{{ p.username }} — Desde {{ p.created_at.strftime('%d/%m/%Y') }}</p>
-            <!-- Edit form (hidden by default) -->
-            <form id="edit-form" hx-post="/api/players/{{ p.id }}/edit" hx-swap="none"
-                  style="display:none; margin-top:0.5rem;" class="flex gap-2 items-end flex-wrap">
-                <div>
-                    <label class="form-label">Nombre</label>
-                    <input type="text" name="display_name" value="{{ p.display_name }}" class="form-input" required maxlength="30" style="width:180px;">
-                </div>
-                <div>
-                    <label class="form-label">Username</label>
-                    <input type="text" name="username" value="{{ p.username }}" class="form-input" required minlength="2" maxlength="20" pattern="[a-zA-Z0-9_]+" style="width:150px;">
-                </div>
-                <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('edit-form').style.display='none';">Cancelar</button>
-            </form>
+<!-- Section Head -->
+<div class="section-head">
+    <div class="eyebrow"><span style="color:var(--emerald);">◇</span> &nbsp; PERFIL</div>
+    <h2 class="section-title">Vínculo <em>arcano</em></h2>
+    <div class="section-divider"></div>
+</div>
+
+<!-- Hero Strip Header -->
+<div class="rune-card" style="padding:32px;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:center;margin-bottom:24px;">
+    <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="eyebrow">@{{ p.username }} · Desde {{ p.created_at.strftime('%d/%m/%Y') }}</div>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <h3 style="font-size:48px;line-height:1;" id="player-name-display">{{ p.display_name }}</h3>
+            {% if is_admin %}
+            <button class="btn btn-sm" onclick="document.getElementById('edit-form').style.display='flex';this.style.display='none';">Editar</button>
+            {% endif %}
         </div>
-        <div class="flex gap-4 items-center">
-            <a href="/compare?p1={{ p.id }}" class="btn btn-secondary btn-sm">Comparar con...</a>
-            <div class="stat">
-                <div class="stat-value">{{ p.mmr }}</div>
-                <div class="stat-label">MMR</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a href="/compare?p1={{ p.id }}" class="pill">Comparar con...</a>
+            {% if stats.current_streak > 0 %}
+            <span class="pill emerald">{{ stats.current_streak }} victorias seguidas</span>
+            {% elif stats.current_streak < 0 %}
+            <span class="pill crimson">{{ stats.current_streak|abs }} derrotas seguidas</span>
+            {% endif %}
+        </div>
+        <!-- Edit form (hidden) -->
+        <form id="edit-form" hx-post="/api/players/{{ p.id }}/edit" hx-swap="none"
+              style="display:none;margin-top:8px;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+            <div>
+                <label class="form-label">Nombre</label>
+                <input type="text" name="display_name" value="{{ p.display_name }}" class="form-input" required maxlength="30" style="width:180px;">
             </div>
-            <div class="stat">
-                <div class="stat-value" style="color:var(--text-primary);">{{ p.games_played }}</div>
-                <div class="stat-label">Partidas</div>
+            <div>
+                <label class="form-label">Username</label>
+                <input type="text" name="username" value="{{ p.username }}" class="form-input" required minlength="2" maxlength="20" pattern="[a-zA-Z0-9_]+" style="width:150px;">
             </div>
-            <div class="stat">
-                <div class="stat-value {% if p.win_rate >= 0.5 %}win{% else %}loss{% endif %}">{{ p.win_rate_pct }}</div>
-                <div class="stat-label">Win Rate</div>
-            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
+            <button type="button" class="btn btn-sm" onclick="document.getElementById('edit-form').style.display='none';">Cancelar</button>
+        </form>
+    </div>
+
+    <!-- Stats Grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);">
+        <div style="padding:14px 22px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:130px;">
+            <div class="eyebrow" style="font-size:9px;">MMR</div>
+            <div class="num" style="font-family:var(--serif);font-size:28px;color:var(--emerald-soft);margin-top:4px;">{{ p.mmr }}</div>
+        </div>
+        <div style="padding:14px 22px;border-bottom:1px solid var(--line);min-width:130px;">
+            <div class="eyebrow" style="font-size:9px;">Partidas</div>
+            <div class="num" style="font-family:var(--serif);font-size:28px;color:var(--ink-0);margin-top:4px;">{{ p.games_played }}</div>
+        </div>
+        <div style="padding:14px 22px;border-right:1px solid var(--line);min-width:130px;">
+            <div class="eyebrow" style="font-size:9px;">Winrate</div>
+            <div class="num" style="font-family:var(--serif);font-size:28px;color:{% if p.win_rate >= 0.5 %}var(--emerald-soft){% else %}#ffaaa0{% endif %};margin-top:4px;">{{ p.win_rate_pct }}</div>
+        </div>
+        <div style="padding:14px 22px;min-width:130px;">
+            <div class="eyebrow" style="font-size:9px;">KDA promedio</div>
+            <div class="num" style="font-family:var(--serif);font-size:28px;color:var(--ink-0);margin-top:4px;">{{ stats.avg_kills }}/{{ stats.avg_deaths }}/{{ stats.avg_assists }}</div>
         </div>
     </div>
 </div>
 
-<!-- Stats Grid -->
-<div class="grid grid-4 mb-4">
-    <div class="card stat">
-        <div class="stat-value" style="font-size:1.25rem;">{{ stats.avg_kills }}/{{ stats.avg_deaths }}/{{ stats.avg_assists }}</div>
-        <div class="stat-label">KDA Promedio</div>
+<!-- Stats Row -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:24px;">
+    <div style="background:var(--bg-1);padding:16px 20px;text-align:center;">
+        <div class="num" style="font-family:var(--serif);font-size:24px;color:var(--emerald-soft);">{{ stats.avg_gpm|int }}</div>
+        <div class="eyebrow" style="font-size:9px;margin-top:4px;">GPM Promedio</div>
     </div>
-    <div class="card stat">
-        <div class="stat-value" style="font-size:1.25rem;">{{ stats.avg_gpm|int }}</div>
-        <div class="stat-label">GPM Promedio</div>
-    </div>
-    <div class="card stat">
-        <div class="stat-value {% if stats.current_streak > 0 %}streak-positive{% elif stats.current_streak < 0 %}streak-negative{% endif %}" style="font-size:1.25rem;">
-            {% if stats.current_streak > 0 %}+{{ stats.current_streak }}W
-            {% elif stats.current_streak < 0 %}{{ stats.current_streak|abs }}L
-            {% else %}—{% endif %}
+    <div style="background:var(--bg-1);padding:16px 20px;text-align:center;">
+        <div class="num" style="font-family:var(--serif);font-size:24px;color:{% if stats.current_streak > 0 %}var(--emerald-soft){% elif stats.current_streak < 0 %}#ffaaa0{% else %}var(--ink-1){% endif %};">
+            {% if stats.current_streak > 0 %}+{{ stats.current_streak }}W{% elif stats.current_streak < 0 %}{{ stats.current_streak|abs }}L{% else %}—{% endif %}
         </div>
-        <div class="stat-label">Racha Actual</div>
+        <div class="eyebrow" style="font-size:9px;margin-top:4px;">Racha actual</div>
     </div>
-    <div class="card stat">
-        <div class="stat-value" style="font-size:1.25rem;color:var(--success);">{{ stats.best_win_streak }}W</div>
-        <div class="stat-label">Mejor Racha</div>
+    <div style="background:var(--bg-1);padding:16px 20px;text-align:center;">
+        <div class="num" style="font-family:var(--serif);font-size:24px;color:var(--emerald-soft);">{{ stats.best_win_streak }}W</div>
+        <div class="eyebrow" style="font-size:9px;margin-top:4px;">Mejor racha</div>
+    </div>
+    <div style="background:var(--bg-1);padding:16px 20px;text-align:center;">
+        <div class="num" style="font-family:var(--serif);font-size:24px;color:var(--ink-0);">{{ p.wins }}/{{ p.losses }}</div>
+        <div class="eyebrow" style="font-size:9px;margin-top:4px;">Victorias/Derrotas</div>
     </div>
 </div>
 
 <!-- Role Performance -->
 {% set role_names = {'pos1': 'Carry', 'pos2': 'Mid', 'pos3': 'Offlane', 'pos4': 'Support', 'pos5': 'Hard Supp'} %}
 {% if role_stats %}
-<div class="card mb-4">
-    <div class="card-header">Rendimiento por Rol</div>
-    <div class="flex gap-4 flex-wrap">
+<div class="rune-card" style="padding:24px;margin-bottom:24px;">
+    <h4 style="font-size:20px;margin-bottom:18px;">Rendimiento por Rol</h4>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;">
         {% for rs in role_stats %}
-        <div style="flex:1;min-width:80px;text-align:center;padding:0.5rem;cursor:pointer;"
+        <div style="flex:1;min-width:80px;text-align:center;padding:12px;cursor:pointer;border:1px solid var(--line);transition:all 0.2s;"
              hx-get="/api/players/{{ p.id }}/role-breakdown/{{ rs.role }}"
              hx-target="#breakdown-{{ rs.role }}"
              hx-swap="innerHTML">
-            <div class="text-xs text-muted" style="text-transform:uppercase;">{{ role_names.get(rs.role, rs.role) }}</div>
-            <div class="stat-value" style="font-size:1.5rem;color:var(--accent);">{{ rs.avg_score }}</div>
-            <div class="text-xs text-muted">{{ rs.games }} games</div>
-            <div class="text-xs" style="color:var(--success);">best: {{ rs.best_score }}</div>
-            <div class="text-xs text-muted mt-1">click para desglose</div>
+            <div class="eyebrow" style="font-size:10px;color:var(--emerald);">{{ role_names.get(rs.role, rs.role) }}</div>
+            <div class="num" style="font-family:var(--serif);font-size:32px;color:var(--emerald-soft);margin-top:4px;">{{ rs.avg_score }}</div>
+            <div class="num" style="font-size:10px;color:var(--ink-3);margin-top:4px;">{{ rs.games }} games</div>
+            <div class="num" style="font-size:10px;color:var(--gold);">best: {{ rs.best_score }}</div>
+            <div style="font-size:9px;color:var(--ink-3);margin-top:6px;">click para desglose</div>
         </div>
         {% endfor %}
     </div>
@@ -101,112 +119,116 @@
 {% set has_streaks = a.killing_sprees or a.dominating or a.mega_kills or a.unstoppable or a.wicked_sick or a.monster_kill or a.godlike or a.beyond_godlike %}
 {% set has_objectives = a.courier_kills or a.roshan_kills or a.tormentor_kills %}
 {% if has_multikills or has_streaks or has_objectives %}
-<div class="card mb-4">
-    <div class="card-header">Logros</div>
-    <div class="grid grid-3 gap-4">
+<div class="rune-card" style="padding:24px;margin-bottom:24px;">
+    <h4 style="font-size:20px;margin-bottom:18px;">Logros</h4>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;">
         {% if has_multikills %}
         <div>
-            <div class="text-xs text-muted mb-2" style="text-transform:uppercase;">Multi-Kills</div>
-            {% if a.rampage %}<div class="flex items-center gap-2 mb-1"><span class="text-sm" style="color:#ff4500;">RAMPAGE</span><span class="font-mono font-bold" style="color:#ff4500;">{{ a.rampage }}</span></div>{% endif %}
-            {% if a.ultra_kills %}<div class="flex items-center gap-2 mb-1"><span class="text-sm" style="color:var(--dire);">Ultra Kill</span><span class="font-mono font-bold">{{ a.ultra_kills }}</span></div>{% endif %}
-            {% if a.triple_kills %}<div class="flex items-center gap-2 mb-1"><span class="text-sm" style="color:var(--accent);">Triple Kill</span><span class="font-mono font-bold">{{ a.triple_kills }}</span></div>{% endif %}
-            {% if a.double_kills %}<div class="flex items-center gap-2 mb-1"><span class="text-sm">Double Kill</span><span class="font-mono font-bold">{{ a.double_kills }}</span></div>{% endif %}
+            <div class="eyebrow" style="font-size:10px;margin-bottom:12px;color:var(--emerald);">Multi-Kills</div>
+            {% if a.rampage %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:#ff4500;">RAMPAGE</span><span class="num" style="font-family:var(--serif);font-size:20px;color:#ff4500;">{{ a.rampage }}</span></div>{% endif %}
+            {% if a.ultra_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--dire);">Ultra Kill</span><span class="num" style="font-size:14px;">{{ a.ultra_kills }}</span></div>{% endif %}
+            {% if a.triple_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--gold);">Triple Kill</span><span class="num" style="font-size:14px;">{{ a.triple_kills }}</span></div>{% endif %}
+            {% if a.double_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--ink-1);">Double Kill</span><span class="num" style="font-size:14px;">{{ a.double_kills }}</span></div>{% endif %}
         </div>
         {% endif %}
         {% if has_streaks %}
         <div>
-            <div class="text-xs text-muted mb-2" style="text-transform:uppercase;">Rachas</div>
-            {% if a.beyond_godlike %}<div class="flex items-center gap-2 mb-1"><span class="text-sm" style="color:#ff4500;">Beyond Godlike</span><span class="font-mono font-bold" style="color:#ff4500;">{{ a.beyond_godlike }}</span></div>{% endif %}
-            {% if a.godlike %}<div class="flex items-center gap-2 mb-1"><span class="text-sm" style="color:var(--dire);">Godlike</span><span class="font-mono font-bold">{{ a.godlike }}</span></div>{% endif %}
-            {% if a.monster_kill %}<div class="flex items-center gap-2 mb-1"><span class="text-sm" style="color:var(--dire);">Monster Kill</span><span class="font-mono font-bold">{{ a.monster_kill }}</span></div>{% endif %}
-            {% if a.wicked_sick %}<div class="flex items-center gap-2 mb-1"><span class="text-sm" style="color:var(--accent);">Wicked Sick</span><span class="font-mono font-bold">{{ a.wicked_sick }}</span></div>{% endif %}
-            {% if a.unstoppable %}<div class="flex items-center gap-2 mb-1"><span class="text-sm" style="color:var(--accent);">Unstoppable</span><span class="font-mono font-bold">{{ a.unstoppable }}</span></div>{% endif %}
-            {% if a.mega_kills %}<div class="flex items-center gap-2 mb-1"><span class="text-sm">Mega Kill</span><span class="font-mono font-bold">{{ a.mega_kills }}</span></div>{% endif %}
-            {% if a.dominating %}<div class="flex items-center gap-2 mb-1"><span class="text-sm">Dominating</span><span class="font-mono font-bold">{{ a.dominating }}</span></div>{% endif %}
-            {% if a.killing_sprees %}<div class="flex items-center gap-2 mb-1"><span class="text-sm">Killing Spree</span><span class="font-mono font-bold">{{ a.killing_sprees }}</span></div>{% endif %}
+            <div class="eyebrow" style="font-size:10px;margin-bottom:12px;color:var(--emerald);">Rachas</div>
+            {% if a.beyond_godlike %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:#ff4500;">Beyond Godlike</span><span class="num" style="font-family:var(--serif);font-size:20px;color:#ff4500;">{{ a.beyond_godlike }}</span></div>{% endif %}
+            {% if a.godlike %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--dire);">Godlike</span><span class="num" style="font-size:14px;">{{ a.godlike }}</span></div>{% endif %}
+            {% if a.monster_kill %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--dire);">Monster Kill</span><span class="num" style="font-size:14px;">{{ a.monster_kill }}</span></div>{% endif %}
+            {% if a.wicked_sick %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--gold);">Wicked Sick</span><span class="num" style="font-size:14px;">{{ a.wicked_sick }}</span></div>{% endif %}
+            {% if a.unstoppable %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--gold);">Unstoppable</span><span class="num" style="font-size:14px;">{{ a.unstoppable }}</span></div>{% endif %}
+            {% if a.mega_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--ink-1);">Mega Kill</span><span class="num" style="font-size:14px;">{{ a.mega_kills }}</span></div>{% endif %}
+            {% if a.dominating %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--ink-1);">Dominating</span><span class="num" style="font-size:14px;">{{ a.dominating }}</span></div>{% endif %}
+            {% if a.killing_sprees %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--ink-2);">Killing Spree</span><span class="num" style="font-size:14px;">{{ a.killing_sprees }}</span></div>{% endif %}
         </div>
         {% endif %}
         {% if has_objectives %}
         <div>
-            <div class="text-xs text-muted mb-2" style="text-transform:uppercase;">Objetivos</div>
-            {% if a.roshan_kills %}<div class="flex items-center gap-2 mb-1"><span class="text-sm">Roshan Kills</span><span class="font-mono font-bold">{{ a.roshan_kills }}</span></div>{% endif %}
-            {% if a.tormentor_kills %}<div class="flex items-center gap-2 mb-1"><span class="text-sm">Tormentor Kills</span><span class="font-mono font-bold">{{ a.tormentor_kills }}</span></div>{% endif %}
-            {% if a.courier_kills %}<div class="flex items-center gap-2 mb-1"><span class="text-sm">Courier Kills</span><span class="font-mono font-bold">{{ a.courier_kills }}</span></div>{% endif %}
+            <div class="eyebrow" style="font-size:10px;margin-bottom:12px;color:var(--emerald);">Objetivos</div>
+            {% if a.roshan_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--ink-1);">Roshan Kills</span><span class="num" style="font-size:14px;">{{ a.roshan_kills }}</span></div>{% endif %}
+            {% if a.tormentor_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--ink-1);">Tormentor Kills</span><span class="num" style="font-size:14px;">{{ a.tormentor_kills }}</span></div>{% endif %}
+            {% if a.courier_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--ink-1);">Courier Kills</span><span class="num" style="font-size:14px;">{{ a.courier_kills }}</span></div>{% endif %}
         </div>
         {% endif %}
     </div>
 </div>
 {% endif %}
 
-<div class="grid grid-2">
+<!-- Hero Breakdown + Recent Matches -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
     <!-- Hero Breakdown -->
-    <div class="card">
-        <div class="card-header">Héroes</div>
+    <div class="rune-card" style="padding:24px;">
+        <h4 style="font-size:20px;margin-bottom:18px;">Héroes</h4>
         {% if stats.hero_breakdown %}
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr><th>Héroe</th><th>Games</th><th>WR</th><th>KDA</th><th>GPM</th></tr>
-                </thead>
-                <tbody>
-                    {% for h in stats.hero_breakdown %}
-                    <tr>
-                        <td><img src="{{ h.hero_id | hero_icon }}" class="hero-icon-lg" alt="{{ h.hero_name }}" title="{{ h.hero_name }}{% if h.hero_name == stats.favorite_hero %} ★{% endif %}"></td>
-                        <td>{{ h.games }}</td>
-                        <td class="{% if h.win_rate >= 0.5 %}win{% else %}loss{% endif %}">{{ h.win_rate_pct }}</td>
-                        <td class="font-mono">{{ h.avg_kills }}/{{ h.avg_deaths }}/{{ h.avg_assists }}</td>
-                        <td class="font-mono">{{ h.avg_gpm|int }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+        <table class="arcane">
+            <thead>
+                <tr><th>Héroe</th><th style="text-align:right;">Games</th><th style="text-align:right;">WR</th><th style="text-align:right;">KDA</th><th style="text-align:right;">GPM</th></tr>
+            </thead>
+            <tbody>
+                {% for h in stats.hero_breakdown %}
+                <tr>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <img src="{{ h.hero_id | hero_icon }}" class="hero-icon-lg" alt="{{ h.hero_name }}" title="{{ h.hero_name }}{% if h.hero_name == stats.favorite_hero %} ★{% endif %}">
+                        </div>
+                    </td>
+                    <td class="num" style="text-align:right;color:var(--ink-1);">{{ h.games }}</td>
+                    <td class="num" style="text-align:right;color:{% if h.win_rate >= 0.5 %}var(--emerald-soft){% else %}#ffaaa0{% endif %};">{{ h.win_rate_pct }}</td>
+                    <td class="num" style="text-align:right;color:var(--ink-1);">{{ h.avg_kills }}/{{ h.avg_deaths }}/{{ h.avg_assists }}</td>
+                    <td class="num" style="text-align:right;color:var(--ink-2);">{{ h.avg_gpm|int }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
         {% else %}
-        <p class="text-muted text-sm">Sin datos de héroes aún.</p>
+        <p style="color:var(--ink-3);font-size:13px;">Sin datos de héroes aún.</p>
         {% endif %}
     </div>
 
     <!-- Recent Matches -->
-    <div class="card">
-        <div class="card-header">Partidas Recientes</div>
-        {% if recent_matches %}
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr><th>Héroe</th><th>Resultado</th><th>MMR</th><th>K/D/A</th><th>Fecha</th></tr>
-                </thead>
-                <tbody>
-                    {% for m in recent_matches %}
-                    {% set delta = mmr_by_match.get(m.match_id) %}
-                    <tr>
-                        <td>
-                            <a href="/matches/{{ m.match_id }}"><img src="{{ m.hero_id | hero_icon }}" class="hero-icon-lg" alt="{{ m.hero_name }}" title="{{ m.hero_name }}"></a>
-                        </td>
-                        <td>
-                            <span class="badge {% if m.won %}badge-win{% else %}badge-loss{% endif %}">
-                                {% if m.won %}WIN{% else %}LOSS{% endif %}
-                            </span>
-                        </td>
-                        <td class="font-mono font-bold {% if delta and delta > 0 %}win{% elif delta and delta < 0 %}loss{% else %}text-muted{% endif %}">
-                            {% if delta %}{% if delta > 0 %}+{% endif %}{{ delta }}{% else %}—{% endif %}
-                        </td>
-                        <td class="font-mono">{{ m.kills }}/{{ m.deaths }}/{{ m.assists }}</td>
-                        <td class="text-muted text-xs">{{ m.played_at.strftime('%d/%m %H:%M') }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="rune-card" style="padding:24px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+            <h4 style="font-size:20px;">Partidas Recientes</h4>
+            <span class="eyebrow" style="font-size:10px;">últimas 20</span>
         </div>
+        {% if recent_matches %}
+        <table class="arcane">
+            <thead>
+                <tr><th>Héroe</th><th>Resultado</th><th style="text-align:right;">MMR</th><th style="text-align:right;">K/D/A</th><th style="text-align:right;">Fecha</th></tr>
+            </thead>
+            <tbody>
+                {% for m in recent_matches %}
+                {% set delta = mmr_by_match.get(m.match_id) %}
+                <tr>
+                    <td>
+                        <a href="/matches/{{ m.match_id }}"><img src="{{ m.hero_id | hero_icon }}" class="hero-icon-lg" alt="{{ m.hero_name }}" title="{{ m.hero_name }}"></a>
+                    </td>
+                    <td>
+                        <span class="{% if m.won %}badge-win{% else %}badge-loss{% endif %}">
+                            {% if m.won %}VIC{% else %}DER{% endif %}
+                        </span>
+                    </td>
+                    <td class="num" style="text-align:right;font-size:13px;color:{% if delta and delta > 0 %}var(--emerald-soft){% elif delta and delta < 0 %}#ffaaa0{% else %}var(--ink-3){% endif %};">
+                        {% if delta %}{% if delta > 0 %}+{% endif %}{{ delta }}{% else %}—{% endif %}
+                    </td>
+                    <td class="num" style="text-align:right;font-size:13px;color:var(--ink-1);">{{ m.kills }}/<span style="color:#ffaaa0;">{{ m.deaths }}</span>/{{ m.assists }}</td>
+                    <td class="num" style="text-align:right;font-size:11px;color:var(--ink-3);">{{ m.played_at.strftime('%d/%m %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
         {% else %}
-        <p class="text-muted text-sm">Sin partidas registradas aún.</p>
+        <p style="color:var(--ink-3);font-size:13px;">Sin partidas registradas aún.</p>
         {% endif %}
     </div>
 </div>
 
 <!-- MMR History Chart -->
 {% if mmr_history %}
-<div class="card mt-4">
-    <div class="card-header">Historial de MMR</div>
+<div class="rune-card" style="padding:24px;margin-top:24px;">
+    <h4 style="font-size:20px;margin-bottom:16px;">Historial de MMR</h4>
     {% set mmr_values = mmr_history | map(attribute='mmr_after') | list %}
     {% set baseline = 1000 %}
     {% set y_min = [mmr_values | min, baseline] | min - 30 %}
@@ -225,16 +247,11 @@
     {% set base_y = pad_t + (y_max - baseline) / y_range * chart_h %}
 
     <svg viewBox="0 0 {{ w }} {{ h }}" style="width:100%;height:auto;display:block;" preserveAspectRatio="xMidYMid meet">
-        <!-- Baseline at 1000 -->
-        <line x1="{{ pad_l }}" y1="{{ base_y }}" x2="{{ w - pad_r }}" y2="{{ base_y }}"
-              stroke="#64748b" stroke-width="1" stroke-dasharray="4,3"/>
-        <text x="{{ pad_l - 4 }}" y="{{ base_y + 3 }}" fill="#64748b" font-size="9" text-anchor="end">{{ baseline }}</text>
+        <line x1="{{ pad_l }}" y1="{{ base_y }}" x2="{{ w - pad_r }}" y2="{{ base_y }}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="{{ pad_l - 4 }}" y="{{ base_y + 3 }}" fill="var(--ink-3)" font-size="9" text-anchor="end" font-family="var(--mono)">{{ baseline }}</text>
+        <text x="{{ pad_l - 4 }}" y="{{ pad_t + 4 }}" fill="var(--ink-3)" font-size="9" text-anchor="end" font-family="var(--mono)">{{ y_max | int }}</text>
+        <text x="{{ pad_l - 4 }}" y="{{ h - pad_b + 4 }}" fill="var(--ink-3)" font-size="9" text-anchor="end" font-family="var(--mono)">{{ y_min | int }}</text>
 
-        <!-- Y-axis labels -->
-        <text x="{{ pad_l - 4 }}" y="{{ pad_t + 4 }}" fill="#64748b" font-size="9" text-anchor="end">{{ y_max | int }}</text>
-        <text x="{{ pad_l - 4 }}" y="{{ h - pad_b + 4 }}" fill="#64748b" font-size="9" text-anchor="end">{{ y_min | int }}</text>
-
-        <!-- Green area (above 1000) -->
         {% set points_above = [] %}
         {% for entry in mmr_history %}
         {% set x = pad_l + loop.index0 * x_step %}
@@ -242,10 +259,8 @@
         {% set clipped_y = [mmr_y, base_y] | min %}
         {% if points_above.append(x | string + ',' + clipped_y | string) %}{% endif %}
         {% endfor %}
-        <polygon points="{{ pad_l }},{{ base_y }} {{ points_above | join(' ') }} {{ pad_l + (n - 1) * x_step }},{{ base_y }}"
-                 fill="rgba(34,197,94,0.15)"/>
+        <polygon points="{{ pad_l }},{{ base_y }} {{ points_above | join(' ') }} {{ pad_l + (n - 1) * x_step }},{{ base_y }}" fill="rgba(43,209,126,0.12)"/>
 
-        <!-- Red area (below 1000) -->
         {% set points_below = [] %}
         {% for entry in mmr_history %}
         {% set x = pad_l + loop.index0 * x_step %}
@@ -253,38 +268,32 @@
         {% set clipped_y = [mmr_y, base_y] | max %}
         {% if points_below.append(x | string + ',' + clipped_y | string) %}{% endif %}
         {% endfor %}
-        <polygon points="{{ pad_l }},{{ base_y }} {{ points_below | join(' ') }} {{ pad_l + (n - 1) * x_step }},{{ base_y }}"
-                 fill="rgba(239,68,68,0.15)"/>
+        <polygon points="{{ pad_l }},{{ base_y }} {{ points_below | join(' ') }} {{ pad_l + (n - 1) * x_step }},{{ base_y }}" fill="rgba(217,78,91,0.12)"/>
 
-        <!-- Line -->
         {% set line_points = [] %}
         {% for entry in mmr_history %}
         {% set x = pad_l + loop.index0 * x_step %}
         {% set mmr_y = pad_t + (y_max - entry.mmr_after) / y_range * chart_h %}
         {% if line_points.append(x | string + ',' + mmr_y | string) %}{% endif %}
         {% endfor %}
-        <polyline points="{{ line_points | join(' ') }}"
-                  fill="none" stroke="#f59e0b" stroke-width="2" stroke-linejoin="round"/>
+        <polyline points="{{ line_points | join(' ') }}" fill="none" stroke="var(--emerald)" stroke-width="2" stroke-linejoin="round"/>
 
-        <!-- Dots + tooltips -->
         {% for entry in mmr_history %}
         {% set x = pad_l + loop.index0 * x_step %}
         {% set mmr_y = pad_t + (y_max - entry.mmr_after) / y_range * chart_h %}
         <circle cx="{{ x }}" cy="{{ mmr_y }}" r="3.5"
-                fill="{% if entry.mmr_after >= baseline %}#22c55e{% else %}#ef4444{% endif %}"
-                stroke="var(--bg-card)" stroke-width="1.5">
+                fill="{% if entry.mmr_after >= baseline %}var(--emerald){% else %}var(--crimson){% endif %}"
+                stroke="var(--bg-2)" stroke-width="1.5">
             <title>{{ entry.mmr_after }} ({% if entry.mmr_change >= 0 %}+{% endif %}{{ entry.mmr_change }})</title>
         </circle>
         {% endfor %}
 
-        <!-- Current MMR label at end -->
         {% set last = mmr_history[-1] %}
         {% set last_x = pad_l + (n - 1) * x_step %}
         {% set last_y = pad_t + (y_max - last.mmr_after) / y_range * chart_h %}
-        {% set label_above = last_y > (pad_t + chart_h / 2) %}
-        <text x="{{ last_x }}" y="{% if label_above %}{{ last_y - 10 }}{% else %}{{ last_y + 15 }}{% endif %}"
-              fill="{% if last.mmr_after >= baseline %}#22c55e{% else %}#ef4444{% endif %}"
-              font-size="11" font-weight="700" text-anchor="end">{{ last.mmr_after }}</text>
+        <text x="{{ last_x }}" y="{% if last_y > (pad_t + chart_h / 2) %}{{ last_y - 10 }}{% else %}{{ last_y + 15 }}{% endif %}"
+              fill="{% if last.mmr_after >= baseline %}var(--emerald){% else %}var(--crimson){% endif %}"
+              font-size="11" font-weight="700" text-anchor="end" font-family="var(--mono)">{{ last.mmr_after }}</text>
     </svg>
 </div>
 {% endif %}

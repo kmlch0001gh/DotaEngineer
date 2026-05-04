@@ -2,18 +2,20 @@
 {% block title %}Registrar Jugador — {{ cafe_name }}{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1 class="page-title">Registrar Jugador</h1>
+<div class="section-head">
+    <div class="eyebrow"><span style="color:var(--emerald);">◇</span> &nbsp; REGISTRO</div>
+    <h2 class="section-title">Nuevo <em>invocador</em></h2>
+    <div class="section-divider"></div>
 </div>
 
-<div class="card" style="max-width: 500px;">
+<div class="rune-card" style="max-width:500px;padding:32px;">
     <form hx-post="/api/players" hx-swap="none">
         <div class="form-group">
             <label class="form-label">Username</label>
             <input type="text" name="username" class="form-input" required
                    minlength="2" maxlength="20" pattern="[a-zA-Z0-9_]+"
                    placeholder="e.g. shadow_fiend_god">
-            <small class="text-muted">2-20 caracteres, solo letras, números y _</small>
+            <div style="font-size:11px;color:var(--ink-3);margin-top:4px;">2-20 caracteres, solo letras, números y _</div>
         </div>
         <div class="form-group">
             <label class="form-label">Nombre para mostrar</label>

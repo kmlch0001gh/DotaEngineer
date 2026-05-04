@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Heroes — {{ cafe_name }}{% endblock %}
+
+{% block content %}
+<div class="section-head">
+    <div class="eyebrow"><span style="color:var(--emerald);">◇</span> &nbsp; CODEX</div>
+    <h2 class="section-title">Códice de <em>héroes</em></h2>
+    <div class="section-divider"></div>
+    <div style="color:var(--ink-2);font-family:var(--mono);font-size:12px;letter-spacing:0.08em;">{{ heroes|length }} héroes con datos · estadísticas del café</div>
+</div>
+
+{% if heroes %}
+<div class="rune-card" style="padding:8px 16px;">
+    <div style="overflow-x:auto;">
+        <table class="arcane">
+            <thead>
+                <tr>
+                    <th style="width:50px;">#</th>
+                    <th>Héroe</th>
+                    <th style="text-align:right;">Picks</th>
+                    <th style="text-align:right;">Winrate</th>
+                    <th style="text-align:right;">Bans</th>
+                    <th style="text-align:right;">Ban Rate</th>
+                    <th style="text-align:right;">KDA</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in heroes %}
+                <tr>
+                    <td class="num" style="color:var(--ink-3);font-size:12px;">{{ '%02d' % loop.index }}</td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <img src="{{ h.hero_id | hero_icon }}" class="hero-icon-lg" alt="{{ h.hero_name }}">
+                            <div>
+                                <div style="font-family:var(--serif);font-size:16px;color:var(--ink-0);">{{ h.hero_name }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="num" style="text-align:right;font-size:13px;color:var(--ink-1);">{{ h.picks }}</td>
+                    <td style="text-align:right;">
+                        <div style="display:flex;align-items:center;gap:10px;justify-content:flex-end;">
+                            <span class="num" style="font-size:14px;color:{% if h.win_rate >= 52 %}var(--emerald-soft){% else %}var(--ink-1){% endif %};min-width:50px;text-align:right;">{{ h.win_rate }}%</span>
+                            <div class="bar" style="width:80px;"><span style="width:{{ ((h.win_rate - 30) * 1.4)|int }}%;"></span></div>
+                        </div>
+                    </td>
+                    <td class="num" style="text-align:right;font-size:13px;color:var(--ink-1);">{{ h.bans }}</td>
+                    <td class="num" style="text-align:right;font-size:13px;color:{% if h.ban_rate >= 30 %}#ffaaa0{% else %}var(--ink-1){% endif %};">{{ h.ban_rate }}%</td>
+                    <td class="num" style="text-align:right;font-size:13px;color:var(--ink-1);">{{ h.avg_kda }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="rune-card" style="padding:32px;text-align:center;">
+    <p style="color:var(--ink-3);">Aún no hay datos de héroes. Juega partidas para ver estadísticas.</p>
+</div>
+{% endif %}
+{% endblock %}
