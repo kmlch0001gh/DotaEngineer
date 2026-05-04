@@ -83,6 +83,20 @@ CREATE TABLE IF NOT EXISTS match_players (
     rune_pickups    INTEGER DEFAULT 0,
     roshan_kills    INTEGER DEFAULT 0,
     tower_kills     INTEGER DEFAULT 0,
+    courier_kills   INTEGER DEFAULT 0,
+    tormentor_kills INTEGER DEFAULT 0,
+    double_kills    INTEGER DEFAULT 0,
+    triple_kills    INTEGER DEFAULT 0,
+    ultra_kills     INTEGER DEFAULT 0,
+    rampage         INTEGER DEFAULT 0,
+    killing_sprees  INTEGER DEFAULT 0,
+    dominating      INTEGER DEFAULT 0,
+    mega_kills      INTEGER DEFAULT 0,
+    unstoppable     INTEGER DEFAULT 0,
+    wicked_sick     INTEGER DEFAULT 0,
+    monster_kill    INTEGER DEFAULT 0,
+    godlike         INTEGER DEFAULT 0,
+    beyond_godlike  INTEGER DEFAULT 0,
     UNIQUE(match_id, slot)
 );
 
@@ -202,11 +216,33 @@ def release_connection(con: Connection) -> None:
     get_pool().putconn(con._conn)
 
 
+_MIGRATIONS_SQL = """
+-- Add achievement columns to match_players (safe to run multiple times)
+DO $$ BEGIN
+    ALTER TABLE match_players ADD COLUMN IF NOT EXISTS courier_kills INTEGER DEFAULT 0;
+    ALTER TABLE match_players ADD COLUMN IF NOT EXISTS tormentor_kills INTEGER DEFAULT 0;
+    ALTER TABLE match_players ADD COLUMN IF NOT EXISTS double_kills INTEGER DEFAULT 0;
+    ALTER TABLE match_players ADD COLUMN IF NOT EXISTS triple_kills INTEGER DEFAULT 0;
+    ALTER TABLE match_players ADD COLUMN IF NOT EXISTS ultra_kills INTEGER DEFAULT 0;
+    ALTER TABLE match_players ADD COLUMN IF NOT EXISTS rampage INTEGER DEFAULT 0;
+    ALTER TABLE match_players ADD COLUMN IF NOT EXISTS killing_sprees INTEGER DEFAULT 0;
+    ALTER TABLE match_players ADD COLUMN IF NOT EXISTS dominating INTEGER DEFAULT 0;
+    ALTER TABLE match_players ADD COLUMN IF NOT EXISTS mega_kills INTEGER DEFAULT 0;
+    ALTER TABLE match_players ADD COLUMN IF NOT EXISTS unstoppable INTEGER DEFAULT 0;
+    ALTER TABLE match_players ADD COLUMN IF NOT EXISTS wicked_sick INTEGER DEFAULT 0;
+    ALTER TABLE match_players ADD COLUMN IF NOT EXISTS monster_kill INTEGER DEFAULT 0;
+    ALTER TABLE match_players ADD COLUMN IF NOT EXISTS godlike INTEGER DEFAULT 0;
+    ALTER TABLE match_players ADD COLUMN IF NOT EXISTS beyond_godlike INTEGER DEFAULT 0;
+END $$;
+"""
+
+
 def init_schema() -> None:
     """Create all tables if they don't exist."""
     pool = get_pool()
     with pool.connection() as conn:
         conn.execute(SCHEMA_SQL)
+        conn.execute(_MIGRATIONS_SQL)
         conn.commit()
     log.info("database_schema_initialized", url=_mask_url(settings.database_url))
 

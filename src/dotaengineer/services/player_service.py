@@ -9,6 +9,7 @@ from dotaengineer.db import Connection
 from dotaengineer.models.player import (
     HeroBreakdown,
     Player,
+    PlayerAchievements,
     PlayerCreate,
     PlayerStats,
 )
@@ -191,6 +192,48 @@ def get_player_stats(player_id: int, con: Connection) -> PlayerStats | None:
 
     hero_breakdown = get_player_hero_breakdown(player_id, con)
 
+    # Achievements totals
+    ach_row = con.execute(
+        """
+        SELECT
+            coalesce(sum(double_kills), 0),
+            coalesce(sum(triple_kills), 0),
+            coalesce(sum(ultra_kills), 0),
+            coalesce(sum(rampage), 0),
+            coalesce(sum(killing_sprees), 0),
+            coalesce(sum(dominating), 0),
+            coalesce(sum(mega_kills), 0),
+            coalesce(sum(unstoppable), 0),
+            coalesce(sum(wicked_sick), 0),
+            coalesce(sum(monster_kill), 0),
+            coalesce(sum(godlike), 0),
+            coalesce(sum(beyond_godlike), 0),
+            coalesce(sum(courier_kills), 0),
+            coalesce(sum(roshan_kills), 0),
+            coalesce(sum(tormentor_kills), 0)
+        FROM match_players
+        WHERE player_id = ?
+        """,
+        [player_id],
+    ).fetchone()
+    achievements = PlayerAchievements(
+        double_kills=ach_row[0],
+        triple_kills=ach_row[1],
+        ultra_kills=ach_row[2],
+        rampage=ach_row[3],
+        killing_sprees=ach_row[4],
+        dominating=ach_row[5],
+        mega_kills=ach_row[6],
+        unstoppable=ach_row[7],
+        wicked_sick=ach_row[8],
+        monster_kill=ach_row[9],
+        godlike=ach_row[10],
+        beyond_godlike=ach_row[11],
+        courier_kills=ach_row[12],
+        roshan_kills=ach_row[13],
+        tormentor_kills=ach_row[14],
+    )
+
     return PlayerStats(
         player=player,
         avg_kills=avg_kills,
@@ -201,4 +244,5 @@ def get_player_stats(player_id: int, con: Connection) -> PlayerStats | None:
         current_streak=current_streak,
         best_win_streak=best_win_streak,
         hero_breakdown=hero_breakdown,
+        achievements=achievements,
     )

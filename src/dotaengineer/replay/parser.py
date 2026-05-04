@@ -155,6 +155,20 @@ def _java_json_to_match(data: dict, replay_path: Path) -> MatchCreate:
                 rune_pickups=p.get("rune_pickups", 0),
                 roshan_kills=p.get("roshan_kills", 0),
                 tower_kills=p.get("tower_kills", 0),
+                courier_kills=p.get("courier_kills", 0),
+                tormentor_kills=p.get("tormentor_kills", 0),
+                double_kills=p.get("double_kills", 0),
+                triple_kills=p.get("triple_kills", 0),
+                ultra_kills=p.get("ultra_kills", 0),
+                rampage=p.get("rampage", 0),
+                killing_sprees=p.get("killing_sprees", 0),
+                dominating=p.get("dominating", 0),
+                mega_kills=p.get("mega_kills", 0),
+                unstoppable=p.get("unstoppable", 0),
+                wicked_sick=p.get("wicked_sick", 0),
+                monster_kill=p.get("monster_kill", 0),
+                godlike=p.get("godlike", 0),
+                beyond_godlike=p.get("beyond_godlike", 0),
             )
         )
 

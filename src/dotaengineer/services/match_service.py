@@ -64,8 +64,13 @@ def create_match(data: MatchCreate, con: Connection) -> int:
                 hero_healing, level, items_json, won,
                 obs_wards_placed, sentry_wards_placed, wards_destroyed,
                 camps_stacked, stun_duration, damage_taken,
-                gold_spent_support, rune_pickups, roshan_kills, tower_kills)
-            VALUES (?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?, ?,?,?,?,?,?,?,?,?,?)
+                gold_spent_support, rune_pickups, roshan_kills, tower_kills,
+                courier_kills, tormentor_kills,
+                double_kills, triple_kills, ultra_kills, rampage,
+                killing_sprees, dominating, mega_kills, unstoppable,
+                wicked_sick, monster_kill, godlike, beyond_godlike)
+            VALUES (?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?, ?,?,?,?,?,?,?,?,?,?,
+                    ?,?, ?,?,?,?, ?,?,?,?,?,?,?,?)
             """,
             [
                 match_id,
@@ -97,6 +102,20 @@ def create_match(data: MatchCreate, con: Connection) -> int:
                 p.rune_pickups,
                 p.roshan_kills,
                 p.tower_kills,
+                p.courier_kills,
+                p.tormentor_kills,
+                p.double_kills,
+                p.triple_kills,
+                p.ultra_kills,
+                p.rampage,
+                p.killing_sprees,
+                p.dominating,
+                p.mega_kills,
+                p.unstoppable,
+                p.wicked_sick,
+                p.monster_kill,
+                p.godlike,
+                p.beyond_godlike,
             ],
         )
 

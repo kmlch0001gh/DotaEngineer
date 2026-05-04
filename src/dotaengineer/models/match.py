@@ -35,6 +35,20 @@ class MatchPlayerCreate(BaseModel):
     rune_pickups: int = 0
     roshan_kills: int = 0
     tower_kills: int = 0
+    courier_kills: int = 0
+    tormentor_kills: int = 0
+    double_kills: int = 0
+    triple_kills: int = 0
+    ultra_kills: int = 0
+    rampage: int = 0
+    killing_sprees: int = 0
+    dominating: int = 0
+    mega_kills: int = 0
+    unstoppable: int = 0
+    wicked_sick: int = 0
+    monster_kill: int = 0
+    godlike: int = 0
+    beyond_godlike: int = 0
 
 
 class MatchCreate(BaseModel):
@@ -88,6 +102,20 @@ class MatchPlayer(BaseModel):
     rune_pickups: int = 0
     roshan_kills: int = 0
     tower_kills: int = 0
+    courier_kills: int = 0
+    tormentor_kills: int = 0
+    double_kills: int = 0
+    triple_kills: int = 0
+    ultra_kills: int = 0
+    rampage: int = 0
+    killing_sprees: int = 0
+    dominating: int = 0
+    mega_kills: int = 0
+    unstoppable: int = 0
+    wicked_sick: int = 0
+    monster_kill: int = 0
+    godlike: int = 0
+    beyond_godlike: int = 0
 
     @property
     def final_items(self) -> list[str]:

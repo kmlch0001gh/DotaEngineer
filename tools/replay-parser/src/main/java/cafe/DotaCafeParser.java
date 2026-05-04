@@ -57,6 +57,27 @@ public class DotaCafeParser {
     final int[][] roshanKillsT = new int[2][5];
     final int[][] towerKillsT = new int[2][5];
 
+    // Multi-kills and kill streaks per player (indexed by playerID/2, like prKills)
+    final int[] multiKill2 = new int[20]; // double kill
+    final int[] multiKill3 = new int[20]; // triple kill
+    final int[] multiKill4 = new int[20]; // ultra kill
+    final int[] multiKill5 = new int[20]; // rampage
+    final int[] streak3 = new int[20];    // killing spree
+    final int[] streak4 = new int[20];    // dominating
+    final int[] streak5 = new int[20];    // mega kill
+    final int[] streak6 = new int[20];    // unstoppable
+    final int[] streak7 = new int[20];    // wicked sick
+    final int[] streak8 = new int[20];    // monster kill
+    final int[] streak9 = new int[20];    // godlike
+    final int[] streak10 = new int[20];   // beyond godlike
+
+    // Special objectives per team-slot
+    final int[][] courierKillsT = new int[2][5];
+    final int[][] tormentorKillsT = new int[2][5];
+
+    // Hero name → playerID mapping (from combat log names)
+    final Map<String, Integer> heroNameToPlayerIdx = new HashMap<>();
+
     float gameTime = 0;
     float gameStartTime = 0;
     int totalPausedTicks = 0;
@@ -87,6 +108,7 @@ public class DotaCafeParser {
 
             trackItemEntity(e);
             trackHeroInventory(e, dt);
+            trackHeroPlayerMapping(e, dt);
 
             if ("CDOTAPlayerController".equals(dt)) {
                 captureController(e);
@@ -154,22 +176,115 @@ public class DotaCafeParser {
     @OnCombatLogEntry
     public void onCombatLog(Context ctx, CombatLogEntry entry) {
         try {
-            if (entry.getType() != DOTA_COMBATLOG_TYPES.DOTA_COMBATLOG_PURCHASE) return;
+            DOTA_COMBATLOG_TYPES type = entry.getType();
 
-            String buyer = entry.getTargetName();
-            String item = entry.getValueName();
-            float time = entry.getTimestamp();
+            if (type == DOTA_COMBATLOG_TYPES.DOTA_COMBATLOG_PURCHASE) {
+                String buyer = entry.getTargetName();
+                String item = entry.getValueName();
+                float time = entry.getTimestamp();
 
-            if (buyer == null || item == null) return;
+                if (buyer == null || item == null) return;
 
-            String heroKey = buyer.replace("npc_dota_hero_", "");
-            String itemName = item.replace("item_", "");
+                String heroKey = buyer.replace("npc_dota_hero_", "");
+                String itemName = item.replace("item_", "");
 
-            purchaseLog.computeIfAbsent(heroKey, k -> new ArrayList<>())
-                .add(Map.of("item", itemName, "time", time));
+                purchaseLog.computeIfAbsent(heroKey, k -> new ArrayList<>())
+                    .add(Map.of("item", itemName, "time", time));
+            } else if (type == DOTA_COMBATLOG_TYPES.DOTA_COMBATLOG_MULTIKILL) {
+                // Multi-kills: value = kill count in the multi-kill (2=double, 3=triple, etc.)
+                String attacker = entry.getAttackerName();
+                if (attacker == null) return;
+                int idx = resolvePlayerIdx(attacker);
+                if (idx < 0) return;
+                int count = entry.getValue();
+                if (count == 2) multiKill2[idx]++;
+                else if (count == 3) multiKill3[idx]++;
+                else if (count == 4) multiKill4[idx]++;
+                else if (count >= 5) multiKill5[idx]++;
+            } else if (type == DOTA_COMBATLOG_TYPES.DOTA_COMBATLOG_KILLSTREAK) {
+                // Kill streaks: value = streak count (3=spree, 4=dominating, etc.)
+                String attacker = entry.getAttackerName();
+                if (attacker == null) return;
+                int idx = resolvePlayerIdx(attacker);
+                if (idx < 0) return;
+                int count = entry.getValue();
+                if (count == 3) streak3[idx]++;
+                else if (count == 4) streak4[idx]++;
+                else if (count == 5) streak5[idx]++;
+                else if (count == 6) streak6[idx]++;
+                else if (count == 7) streak7[idx]++;
+                else if (count == 8) streak8[idx]++;
+                else if (count == 9) streak9[idx]++;
+                else if (count >= 10) streak10[idx]++;
+            } else if (type == DOTA_COMBATLOG_TYPES.DOTA_COMBATLOG_DEATH) {
+                // Check for courier kills and tormentor kills
+                String target = entry.getTargetName();
+                String attacker = entry.getAttackerName();
+                if (target == null || attacker == null) return;
+
+                if (target.contains("courier")) {
+                    // Courier killed — credit to attacking hero's team slot
+                    int[] ts = resolveTeamSlot(attacker);
+                    if (ts != null) courierKillsT[ts[0]][ts[1]]++;
+                } else if (target.contains("npc_dota_minion_tormentor")
+                        || target.contains("npc_dota_tormentor")) {
+                    int[] ts = resolveTeamSlot(attacker);
+                    if (ts != null) tormentorKillsT[ts[0]][ts[1]]++;
+                }
+            }
         } catch (Exception ex) {
             // ignore
         }
+    }
+
+    /** Resolve hero combat log name (e.g. "npc_dota_hero_slardar") to prIdx.
+     *  Uses heroNameToPlayerIdx cache; populates lazily from hero entity tracking. */
+    private int resolvePlayerIdx(String heroName) {
+        String key = heroName.replace("npc_dota_hero_", "").toLowerCase();
+        Integer cached = heroNameToPlayerIdx.get(key);
+        if (cached != null) return cached;
+        return -1;
+    }
+
+    /** Called when hero entity is seen — maps entity class name to player index.
+     *  Uses m_iPlayerID from hero entity (Dota 2 player slot 0-23). */
+    private void trackHeroPlayerMapping(Entity e, String dt) {
+        if (!dt.startsWith("CDOTA_Unit_Hero_")) return;
+        String heroShort = dt.replace("CDOTA_Unit_Hero_", "").toLowerCase();
+        if (heroNameToPlayerIdx.containsKey(heroShort)) return;
+
+        // Try multiple field names — Dota 2 uses different names across versions
+        String[] fields = {"m_iPlayerID", "m_nPlayerID", "m_playerID"};
+        for (String field : fields) {
+            int pid = ri(e, field);
+            if (pid >= 0 && pid < 40) {
+                heroNameToPlayerIdx.put(heroShort, pid / 2);
+                return;
+            }
+        }
+    }
+
+    /** Resolve hero name to [team, teamSlot] pair. */
+    private int[] resolveTeamSlot(String heroName) {
+        int idx = resolvePlayerIdx(heroName);
+        if (idx < 0) return null;
+        // Find this player's team and slot from playerTeam map
+        for (Map.Entry<Integer, Integer> e : playerTeam.entrySet()) {
+            int pid = e.getKey();
+            if (pid / 2 == idx) {
+                int team = e.getValue();
+                int t = (team == 2) ? 0 : 1;
+                List<Integer> teamPids = new ArrayList<>();
+                for (Map.Entry<Integer, Integer> e2 : playerTeam.entrySet()) {
+                    if (e2.getValue().equals(team)) teamPids.add(e2.getKey());
+                }
+                Collections.sort(teamPids);
+                int teamSlot = teamPids.indexOf(pid);
+                if (teamSlot < 0 || teamSlot >= 5) return null;
+                return new int[]{t, teamSlot};
+            }
+        }
+        return null;
     }
 
     private void trackItemEntity(Entity e) {
@@ -372,6 +487,22 @@ public class DotaCafeParser {
                 p.put("rune_pickups", parser.runePickupsT[t][teamSlot]);
                 p.put("roshan_kills", parser.roshanKillsT[t][teamSlot]);
                 p.put("tower_kills", parser.towerKillsT[t][teamSlot]);
+                p.put("courier_kills", parser.courierKillsT[t][teamSlot]);
+                p.put("tormentor_kills", parser.tormentorKillsT[t][teamSlot]);
+
+                // Multi-kills and kill streaks (indexed by prIdx)
+                p.put("double_kills", parser.multiKill2[prIdx]);
+                p.put("triple_kills", parser.multiKill3[prIdx]);
+                p.put("ultra_kills", parser.multiKill4[prIdx]);
+                p.put("rampage", parser.multiKill5[prIdx]);
+                p.put("killing_sprees", parser.streak3[prIdx]);
+                p.put("dominating", parser.streak4[prIdx]);
+                p.put("mega_kills", parser.streak5[prIdx]);
+                p.put("unstoppable", parser.streak6[prIdx]);
+                p.put("wicked_sick", parser.streak7[prIdx]);
+                p.put("monster_kill", parser.streak8[prIdx]);
+                p.put("godlike", parser.streak9[prIdx]);
+                p.put("beyond_godlike", parser.streak10[prIdx]);
 
                 // Final inventory from entity state
                 String heroShort = findHeroShortName(parser, heroId);
