@@ -119,31 +119,31 @@
         {% if has_multikills %}
         <div>
             <div class="eyebrow" style="font-size:10px;margin-bottom:12px;color:var(--emerald);">Multi-Kills</div>
-            {% if a.rampage %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:#ff4500;">RAMPAGE</span><span class="num" style="font-family:var(--serif);font-size:20px;color:#ff4500;">{{ a.rampage }}</span></div>{% endif %}
-            {% if a.ultra_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--dire);">Ultra Kill</span><span class="num" style="font-size:14px;">{{ a.ultra_kills }}</span></div>{% endif %}
-            {% if a.triple_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--gold);">Triple Kill</span><span class="num" style="font-size:14px;">{{ a.triple_kills }}</span></div>{% endif %}
-            {% if a.double_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--ink-1);">Double Kill</span><span class="num" style="font-size:14px;">{{ a.double_kills }}</span></div>{% endif %}
+            {% if a.rampage %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="num" style="font-size:12px;color:#ff4500;letter-spacing:0.1em;">RAMPAGE</span><span class="num" style="font-family:var(--serif);font-size:20px;color:#ff4500;">{{ a.rampage }}</span></div>{% endif %}
+            {% if a.ultra_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="num" style="font-size:12px;color:var(--dire);">Ultra Kill</span><span class="num" style="font-size:14px;">{{ a.ultra_kills }}</span></div>{% endif %}
+            {% if a.triple_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="num" style="font-size:12px;color:var(--gold);">Triple Kill</span><span class="num" style="font-size:14px;">{{ a.triple_kills }}</span></div>{% endif %}
+            {% if a.double_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="num" style="font-size:12px;color:var(--ink-1);">Double Kill</span><span class="num" style="font-size:14px;">{{ a.double_kills }}</span></div>{% endif %}
         </div>
         {% endif %}
         {% if has_streaks %}
         <div>
             <div class="eyebrow" style="font-size:10px;margin-bottom:12px;color:var(--emerald);">Rachas</div>
-            {% if a.beyond_godlike %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:#ff4500;">Beyond Godlike</span><span class="num" style="font-family:var(--serif);font-size:20px;color:#ff4500;">{{ a.beyond_godlike }}</span></div>{% endif %}
-            {% if a.godlike %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--dire);">Godlike</span><span class="num" style="font-size:14px;">{{ a.godlike }}</span></div>{% endif %}
-            {% if a.monster_kill %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--dire);">Monster Kill</span><span class="num" style="font-size:14px;">{{ a.monster_kill }}</span></div>{% endif %}
-            {% if a.wicked_sick %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--gold);">Wicked Sick</span><span class="num" style="font-size:14px;">{{ a.wicked_sick }}</span></div>{% endif %}
-            {% if a.unstoppable %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--gold);">Unstoppable</span><span class="num" style="font-size:14px;">{{ a.unstoppable }}</span></div>{% endif %}
-            {% if a.mega_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--ink-1);">Mega Kill</span><span class="num" style="font-size:14px;">{{ a.mega_kills }}</span></div>{% endif %}
-            {% if a.dominating %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--ink-1);">Dominating</span><span class="num" style="font-size:14px;">{{ a.dominating }}</span></div>{% endif %}
-            {% if a.killing_sprees %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--ink-2);">Killing Spree</span><span class="num" style="font-size:14px;">{{ a.killing_sprees }}</span></div>{% endif %}
+            {% if a.beyond_godlike %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="num" style="font-size:12px;color:#ff4500;letter-spacing:0.1em;">Beyond Godlike</span><span class="num" style="font-family:var(--serif);font-size:20px;color:#ff4500;">{{ a.beyond_godlike }}</span></div>{% endif %}
+            {% if a.godlike %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="num" style="font-size:12px;color:var(--dire);">Godlike</span><span class="num" style="font-size:14px;">{{ a.godlike }}</span></div>{% endif %}
+            {% if a.monster_kill %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="num" style="font-size:12px;color:var(--dire);">Monster Kill</span><span class="num" style="font-size:14px;">{{ a.monster_kill }}</span></div>{% endif %}
+            {% if a.wicked_sick %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="num" style="font-size:12px;color:var(--gold);">Wicked Sick</span><span class="num" style="font-size:14px;">{{ a.wicked_sick }}</span></div>{% endif %}
+            {% if a.unstoppable %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="num" style="font-size:12px;color:var(--gold);">Unstoppable</span><span class="num" style="font-size:14px;">{{ a.unstoppable }}</span></div>{% endif %}
+            {% if a.mega_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="num" style="font-size:12px;color:var(--ink-1);">Mega Kill</span><span class="num" style="font-size:14px;">{{ a.mega_kills }}</span></div>{% endif %}
+            {% if a.dominating %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="num" style="font-size:12px;color:var(--ink-1);">Dominating</span><span class="num" style="font-size:14px;">{{ a.dominating }}</span></div>{% endif %}
+            {% if a.killing_sprees %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="num" style="font-size:12px;color:var(--ink-2);">Killing Spree</span><span class="num" style="font-size:14px;">{{ a.killing_sprees }}</span></div>{% endif %}
         </div>
         {% endif %}
         {% if has_objectives %}
         <div>
             <div class="eyebrow" style="font-size:10px;margin-bottom:12px;color:var(--emerald);">Objetivos</div>
-            {% if a.roshan_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--ink-1);">Roshan Kills</span><span class="num" style="font-size:14px;">{{ a.roshan_kills }}</span></div>{% endif %}
-            {% if a.tormentor_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--ink-1);">Tormentor Kills</span><span class="num" style="font-size:14px;">{{ a.tormentor_kills }}</span></div>{% endif %}
-            {% if a.courier_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:13px;color:var(--ink-1);">Courier Kills</span><span class="num" style="font-size:14px;">{{ a.courier_kills }}</span></div>{% endif %}
+            {% if a.roshan_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="num" style="font-size:12px;color:var(--ink-1);">Roshan Kills</span><span class="num" style="font-size:14px;">{{ a.roshan_kills }}</span></div>{% endif %}
+            {% if a.tormentor_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="num" style="font-size:12px;color:var(--ink-1);">Tormentor Kills</span><span class="num" style="font-size:14px;">{{ a.tormentor_kills }}</span></div>{% endif %}
+            {% if a.courier_kills %}<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span class="num" style="font-size:12px;color:var(--ink-1);">Courier Kills</span><span class="num" style="font-size:14px;">{{ a.courier_kills }}</span></div>{% endif %}
         </div>
         {% endif %}
     </div>
