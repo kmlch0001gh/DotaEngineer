@@ -415,24 +415,14 @@ public class DotaCafeParser {
             System.err.println("Note: " + e.getMessage());
         }
 
-        if (parser.gameWinnerEntity > 0) {
-            radiantWin = (parser.gameWinnerEntity == 2);
-        } else if (gameWinner == 0) {
-            int rk = 0, dk = 0;
-            for (int i = 0; i < 5; i++) rk += parser.prKills[i];
-            for (int i = 5; i < 10; i++) dk += parser.prKills[i];
-            radiantWin = rk > dk;
-        }
-
         float pauseSecs = parser.totalPausedTicks / 30.0f;
         float actualGameSecs = duration - parser.gameStartTime - pauseSecs;
         if (actualGameSecs <= 0) actualGameSecs = duration;
         int durationSecs = (int) actualGameSecs;
         float gameTimeMins = Math.max(actualGameSecs / 60.0f, 1);
 
-        // Calculate team scores
+        // Build team PID lists from actual team assignment
         int radiantKills = 0, direKills = 0;
-        // Need to sum based on actual team membership
         List<Integer> radiantPids = new ArrayList<>();
         List<Integer> direPids = new ArrayList<>();
         for (Map.Entry<Integer, Integer> entry : parser.playerTeam.entrySet()) {
@@ -444,6 +434,26 @@ public class DotaCafeParser {
 
         for (int pid : radiantPids) radiantKills += parser.prKills[pid / 2];
         for (int pid : direPids) direKills += parser.prKills[pid / 2];
+
+        // Determine winner.
+        // Priority: entity tracker > header > kills fallback.
+        // BUT: if the kill difference is very large (>10) and contradicts the declared
+        // winner, the game likely didn't finish recording properly (LAN issue).
+        // In that case, trust kills over the declared winner.
+        if (parser.gameWinnerEntity > 0) {
+            radiantWin = (parser.gameWinnerEntity == 2);
+        } else if (gameWinner > 0) {
+            radiantWin = (gameWinner == 2);
+        }
+        // Sanity check: if kills strongly contradict declared winner, override
+        int killDiff = radiantKills - direKills;
+        if (Math.abs(killDiff) > 10) {
+            boolean killsWinner = killDiff > 0;
+            if (killsWinner != radiantWin) {
+                // Large kill advantage contradicts declared winner — game didn't finish properly
+                radiantWin = killsWinner;
+            }
+        }
 
         // Build player list
         List<Map<String, Object>> players = new ArrayList<>();
