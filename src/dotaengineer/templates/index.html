@@ -174,23 +174,23 @@
     {% if matches %}
     {% for m in matches %}
     <a href="/matches/{{ m.id }}" style="text-decoration:none;color:inherit;display:block;">
-        <div style="padding:12px 16px;border:1px solid var(--line);margin-bottom:8px;background:var(--bg-1);display:flex;justify-content:space-between;align-items:center;transition:all 0.2s;">
-            <div style="display:flex;align-items:center;gap:16px;">
+        <div style="padding:12px 16px;border:1px solid var(--line);margin-bottom:8px;background:var(--bg-1);display:flex;justify-content:space-between;align-items:center;transition:all 0.2s;overflow:hidden;flex-wrap:wrap;gap:8px;">
+            <div style="display:flex;align-items:center;gap:12px;min-width:0;">
                 <span class="{% if m.radiant_win %}badge-win{% else %}badge-loss{% endif %}">
                     {{ m.radiant_score }} - {{ m.dire_score }}
                 </span>
                 <span style="font-family:var(--serif);font-size:16px;color:{% if m.radiant_win %}var(--radiant){% else %}var(--dire){% endif %};">{{ m.winner }}</span>
                 <span class="num" style="font-size:12px;color:var(--ink-3);">{{ m.duration_display }}</span>
+                <span class="num" style="font-size:11px;color:var(--ink-3);">{{ m.played_at.strftime('%d/%m %H:%M') }}</span>
             </div>
-            <div style="display:flex;align-items:center;gap:4px;">
+            <div class="match-heroes-row" style="display:flex;align-items:center;gap:2px;flex-shrink:0;">
                 {% for p in m.radiant_players %}
                 <img src="{{ p.hero_id | hero_icon }}" class="hero-icon" alt="{{ p.hero_name }}" title="{{ p.hero_name }}{% if p.player_name %} ({{ p.player_name }}){% endif %}">
                 {% endfor %}
-                <span class="num" style="font-size:10px;color:var(--ink-3);margin:0 4px;">vs</span>
+                <span class="num" style="font-size:9px;color:var(--ink-3);margin:0 2px;">vs</span>
                 {% for p in m.dire_players %}
                 <img src="{{ p.hero_id | hero_icon }}" class="hero-icon" alt="{{ p.hero_name }}" title="{{ p.hero_name }}{% if p.player_name %} ({{ p.player_name }}){% endif %}">
                 {% endfor %}
-                <span class="num" style="font-size:11px;color:var(--ink-3);margin-left:12px;">{{ m.played_at.strftime('%d/%m %H:%M') }}</span>
             </div>
         </div>
     </a>

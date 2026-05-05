@@ -18,15 +18,17 @@
             <span class="pill" style="font-size:9px;">{{ m.claimed_count }}/{{ m.players|length }}</span>
             {% endif %}
         </div>
-        <div style="display:flex;align-items:center;gap:4px;">
-            {% for p in m.radiant_players %}
-            <img src="{{ p.hero_id | hero_icon }}" class="hero-icon" alt="{{ p.hero_name }}" title="{{ p.hero_name }}{% if p.player_name %} ({{ p.player_name }}){% endif %}">
-            {% endfor %}
-            <span class="num" style="font-size:10px;color:var(--ink-3);margin:0 4px;">vs</span>
-            {% for p in m.dire_players %}
-            <img src="{{ p.hero_id | hero_icon }}" class="hero-icon" alt="{{ p.hero_name }}" title="{{ p.hero_name }}{% if p.player_name %} ({{ p.player_name }}){% endif %}">
-            {% endfor %}
-            <span class="num" style="font-size:11px;color:var(--ink-3);margin-left:12px;">{{ m.played_at.strftime('%d/%m/%Y %H:%M') }}</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <div class="match-heroes-row" style="display:flex;align-items:center;gap:2px;">
+                {% for p in m.radiant_players %}
+                <img src="{{ p.hero_id | hero_icon }}" class="hero-icon" alt="{{ p.hero_name }}" title="{{ p.hero_name }}{% if p.player_name %} ({{ p.player_name }}){% endif %}">
+                {% endfor %}
+                <span class="num" style="font-size:9px;color:var(--ink-3);margin:0 2px;">vs</span>
+                {% for p in m.dire_players %}
+                <img src="{{ p.hero_id | hero_icon }}" class="hero-icon" alt="{{ p.hero_name }}" title="{{ p.hero_name }}{% if p.player_name %} ({{ p.player_name }}){% endif %}">
+                {% endfor %}
+            </div>
+            <span class="num" style="font-size:11px;color:var(--ink-3);">{{ m.played_at.strftime('%d/%m/%Y %H:%M') }}</span>
         </div>
     </div>
 </a>
