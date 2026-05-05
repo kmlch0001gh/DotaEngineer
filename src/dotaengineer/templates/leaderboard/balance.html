@@ -24,8 +24,8 @@
 
         {% if players %}
         <div style="display:flex;gap:12px;align-items:center;">
-            <button type="submit" class="btn btn-primary" onclick="return updatePlayerIds()">Balancear Equipos</button>
-            <span class="num" style="font-size:12px;color:var(--ink-2);" id="selected-count">0 jugadores seleccionados</span>
+            <button type="submit" class="btn btn-primary" id="balance-btn" onclick="return updatePlayerIds()" disabled>Balancear Equipos</button>
+            <span class="num" style="font-size:12px;" id="selected-count">0 / 10 jugadores</span>
         </div>
         {% else %}
         <p style="color:var(--ink-3);">Registra jugadores primero para usar esta herramienta.</p>
@@ -42,9 +42,13 @@ function updatePlayerIds() {
     const checkboxes = document.querySelectorAll('.player-checkbox:checked');
     const ids = Array.from(checkboxes).map(cb => cb.value);
     document.getElementById('player-ids-input').value = ids.join(',');
-    document.getElementById('selected-count').textContent = ids.length + ' jugadores seleccionados';
-    if (ids.length < 2) {
-        alert('Selecciona al menos 2 jugadores');
+    const count = ids.length;
+    const label = document.getElementById('selected-count');
+    const btn = document.getElementById('balance-btn');
+    label.textContent = count + ' / 10 jugadores';
+    label.style.color = count === 10 ? 'var(--radiant)' : count > 10 ? 'var(--crimson)' : 'var(--ink-2)';
+    btn.disabled = count !== 10;
+    if (count !== 10) {
         return false;
     }
     return true;

@@ -36,15 +36,15 @@ def balance_teams(
             {"message": "IDs de jugadores inválidos", "type": "error"},
         )
 
-    if len(ids) < 2:
+    if len(ids) != 10:
         return templates.TemplateResponse(
             request,
             "partials/toast.html",
-            {"message": "Se necesitan al menos 2 jugadores", "type": "error"},
+            {"message": "Se necesitan exactamente 10 jugadores", "type": "error"},
         )
 
-    result = balance_service.balance_teams(ids, con)
-    if not result:
+    results = balance_service.balance_teams(ids, con)
+    if not results:
         return templates.TemplateResponse(
             request,
             "partials/toast.html",
@@ -54,7 +54,7 @@ def balance_teams(
     return templates.TemplateResponse(
         request,
         "partials/balance_result.html",
-        {"result": result},
+        {"results": results},
     )
 
 

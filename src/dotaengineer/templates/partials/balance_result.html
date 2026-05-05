@@ -1,69 +1,97 @@
-<div class="grid grid-2 mb-4">
-    <!-- Team A (Radiant) -->
-    <div class="card radiant-bg">
-        <div class="card-header">
-            <span class="radiant">Team Radiant</span>
-            <span class="text-muted text-sm"> — Avg MMR: {{ result.team_a.avg_mmr }}</span>
-        </div>
-        <div class="table-wrap">
-            <table>
-                <thead><tr><th>Jugador</th><th>MMR</th></tr></thead>
-                <tbody>
-                    {% for p in result.team_a.players %}
-                    <tr>
-                        <td class="font-bold">{{ p.display_name }}</td>
-                        <td class="font-mono">{{ p.mmr }}</td>
-                    </tr>
-                    {% endfor %}
-                    <tr style="border-top:2px solid var(--border);">
-                        <td class="font-bold">Total</td>
-                        <td class="font-mono font-bold">{{ result.team_a.total_mmr }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="text-center mt-2">
-            <span class="text-sm text-muted">Win Probability: </span>
-            <span class="font-bold radiant">{{ result.predicted_win_a }}%</span>
-        </div>
-    </div>
+{% set results_json = [] %}
+{% for r in results %}
+{% set team_a_players = [] %}
+{% for p in r.team_a.players %}{% set _ = team_a_players.append({"name": p.display_name, "mmr": p.mmr, "role": p.role_label, "score": p.role_score}) %}{% endfor %}
+{% set team_b_players = [] %}
+{% for p in r.team_b.players %}{% set _ = team_b_players.append({"name": p.display_name, "mmr": p.mmr, "role": p.role_label, "score": p.role_score}) %}{% endfor %}
+{% set _ = results_json.append({"team_a": {"players": team_a_players, "total_mmr": r.team_a.total_mmr, "avg_mmr": r.team_a.avg_mmr, "total_role": r.team_a.total_role_score}, "team_b": {"players": team_b_players, "total_mmr": r.team_b.total_mmr, "avg_mmr": r.team_b.avg_mmr, "total_role": r.team_b.total_role_score}, "mmr_diff": r.mmr_difference, "role_diff": r.role_score_difference, "win_a": r.predicted_win_a, "win_b": r.predicted_win_b}) %}
+{% endfor %}
 
-    <!-- Team B (Dire) -->
-    <div class="card dire-bg">
-        <div class="card-header">
-            <span class="dire">Team Dire</span>
-            <span class="text-muted text-sm"> — Avg MMR: {{ result.team_b.avg_mmr }}</span>
-        </div>
-        <div class="table-wrap">
-            <table>
-                <thead><tr><th>Jugador</th><th>MMR</th></tr></thead>
-                <tbody>
-                    {% for p in result.team_b.players %}
-                    <tr>
-                        <td class="font-bold">{{ p.display_name }}</td>
-                        <td class="font-mono">{{ p.mmr }}</td>
-                    </tr>
-                    {% endfor %}
-                    <tr style="border-top:2px solid var(--border);">
-                        <td class="font-bold">Total</td>
-                        <td class="font-mono font-bold">{{ result.team_b.total_mmr }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="text-center mt-2">
-            <span class="text-sm text-muted">Win Probability: </span>
-            <span class="font-bold dire">{{ result.predicted_win_b }}%</span>
-        </div>
-    </div>
+<!-- Shuffle Controls -->
+<div style="display:flex;justify-content:center;align-items:center;gap:16px;margin-bottom:24px;">
+    <button class="btn btn-sm" onclick="shuffleBalance(-1)">←</button>
+    <span class="num" style="font-size:13px;color:var(--ink-1);" id="balance-index">Combinación 1 de {{ results|length }}</span>
+    <button class="btn btn-sm" onclick="shuffleBalance(1)">→</button>
 </div>
 
-<div class="card text-center">
-    <div class="text-sm text-muted">Diferencia de MMR:</div>
-    <div class="font-mono font-bold text-lg" style="color:{% if result.mmr_difference < 50 %}var(--success){% elif result.mmr_difference < 150 %}var(--accent){% else %}var(--error){% endif %}">
-        {{ result.mmr_difference }} pts
-    </div>
-    <div class="text-xs text-muted mt-1">
-        {% if result.mmr_difference < 50 %}Excelente balance{% elif result.mmr_difference < 150 %}Buen balance{% else %}Balance aceptable{% endif %}
-    </div>
-</div>
+<!-- Result Display (dynamically updated by JS) -->
+<div id="balance-display"></div>
+
+<script>
+var _balanceResults = {{ results_json | tojson }};
+var _balanceIdx = 0;
+
+function renderBalance(idx) {
+    var r = _balanceResults[idx];
+    var roleOrder = ['Carry','Mid','Offlane','Support','Hard Supp'];
+    document.getElementById('balance-index').textContent = 'Combinación ' + (idx+1) + ' de ' + _balanceResults.length;
+
+    function teamTable(team, color, label) {
+        var html = '<div class="rune-card" style="padding:20px;">';
+        html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">';
+        html += '<span style="width:8px;height:8px;background:' + color + ';display:inline-block;"></span>';
+        html += '<h4 style="font-size:18px;color:' + color + ';">' + label + '</h4>';
+        html += '<span style="flex:1;"></span>';
+        html += '<span class="num" style="font-size:12px;color:var(--ink-2);">Avg: ' + team.avg_mmr + ' MMR</span>';
+        html += '</div>';
+        html += '<table class="arcane" style="font-size:13px;"><thead><tr>';
+        html += '<th>Rol</th><th>Jugador</th><th style="text-align:right;">MMR</th><th style="text-align:right;">Rol Pts</th>';
+        html += '</tr></thead><tbody>';
+        team.players.forEach(function(p) {
+            html += '<tr>';
+            html += '<td><span class="pill" style="font-size:9px;padding:2px 6px;">' + p.role + '</span></td>';
+            html += '<td style="font-family:var(--serif);font-size:14px;">' + p.name + '</td>';
+            html += '<td class="num" style="text-align:right;color:var(--ink-1);">' + p.mmr + '</td>';
+            html += '<td class="num" style="text-align:right;color:var(--emerald-soft);">' + p.score + '</td>';
+            html += '</tr>';
+        });
+        html += '<tr style="border-top:2px solid var(--line);"><td colspan="2" class="num" style="font-size:11px;color:var(--ink-2);">Total</td>';
+        html += '<td class="num" style="text-align:right;font-weight:700;">' + team.total_mmr + '</td>';
+        html += '<td class="num" style="text-align:right;font-weight:700;color:var(--emerald-soft);">' + team.total_role + '</td></tr>';
+        html += '</tbody></table>';
+        html += '<div style="text-align:center;margin-top:10px;"><span class="num" style="font-size:12px;color:var(--ink-2);">Win: </span><span class="num" style="font-size:14px;font-weight:700;color:' + color + ';">';
+        html += (label === 'Radiant' ? r.win_a : r.win_b) + '%</span></div>';
+        html += '</div>';
+        return html;
+    }
+
+    var html = '<div class="grid-content-2" style="margin-bottom:24px;">';
+    html += teamTable(r.team_a, 'var(--radiant)', 'Radiant');
+    html += teamTable(r.team_b, 'var(--dire)', 'Dire');
+    html += '</div>';
+
+    // Comparison bars
+    var mmrColor = r.mmr_diff < 50 ? 'var(--radiant)' : r.mmr_diff < 150 ? 'var(--emerald)' : 'var(--crimson)';
+    var roleColor = r.role_diff < 20 ? 'var(--radiant)' : r.role_diff < 50 ? 'var(--emerald)' : 'var(--crimson)';
+    var mmrLabel = r.mmr_diff < 50 ? 'Excelente' : r.mmr_diff < 150 ? 'Bueno' : 'Aceptable';
+    var roleLabel = r.role_diff < 20 ? 'Excelente' : r.role_diff < 50 ? 'Bueno' : 'Aceptable';
+
+    html += '<div class="rune-card" style="padding:20px;">';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">';
+
+    // MMR diff
+    html += '<div style="text-align:center;">';
+    html += '<div class="eyebrow" style="font-size:10px;margin-bottom:8px;">Diferencia MMR</div>';
+    html += '<div class="num" style="font-family:var(--serif);font-size:28px;color:' + mmrColor + ';">' + r.mmr_diff + '</div>';
+    html += '<div class="num" style="font-size:11px;color:var(--ink-3);margin-top:4px;">' + mmrLabel + '</div>';
+    html += '</div>';
+
+    // Role diff
+    html += '<div style="text-align:center;">';
+    html += '<div class="eyebrow" style="font-size:10px;margin-bottom:8px;">Diferencia Rol</div>';
+    html += '<div class="num" style="font-family:var(--serif);font-size:28px;color:' + roleColor + ';">' + r.role_diff + '</div>';
+    html += '<div class="num" style="font-size:11px;color:var(--ink-3);margin-top:4px;">' + roleLabel + '</div>';
+    html += '</div>';
+
+    html += '</div></div>';
+
+    document.getElementById('balance-display').innerHTML = html;
+}
+
+function shuffleBalance(dir) {
+    _balanceIdx = (_balanceIdx + dir + _balanceResults.length) % _balanceResults.length;
+    renderBalance(_balanceIdx);
+}
+
+renderBalance(0);
+</script>
