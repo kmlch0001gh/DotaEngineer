@@ -8,7 +8,7 @@
 </div>
 
 {% if players %}
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+<div class="grid-cards-3">
     {% for p in players %}
     <a href="/players/{{ p.id }}" style="text-decoration:none;color:inherit;">
         <div class="rune-card" style="padding:20px;cursor:pointer;">

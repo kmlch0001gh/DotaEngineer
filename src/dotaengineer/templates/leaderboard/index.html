@@ -14,7 +14,7 @@
 {% if leaderboard %}
 <!-- Podium Top 3 -->
 {% if leaderboard|length >= 3 %}
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px;">
+<div class="grid-cards-3" style="margin-bottom:32px;">
     {% set podium_colors = ['var(--gold)', '#c0c0c0', '#cd7f32'] %}
     {% for p in leaderboard[:3] %}
     <div class="rune-card" style="padding:28px;position:relative;overflow:hidden;">

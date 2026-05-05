@@ -10,7 +10,7 @@
     <form id="balance-form" hx-post="/api/balance" hx-target="#balance-result" hx-swap="innerHTML">
         <input type="hidden" name="player_ids" id="player-ids-input">
 
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
+        <div class="grid-cards-3" style="gap:12px;margin-bottom:24px;">
             {% for p in players %}
             <label style="padding:12px;border:1px solid var(--line);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.2s;background:var(--bg-1);">
                 <input type="checkbox" class="player-checkbox" value="{{ p.id }}" onchange="updatePlayerIds()" style="accent-color:var(--emerald);">

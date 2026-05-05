@@ -16,7 +16,7 @@
 </div>
 
 <!-- Stats Grid -->
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:32px;">
+<div class="grid-stats-4" style="gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:32px;">
     <div style="background:var(--bg-1);padding:24px 20px;display:flex;flex-direction:column;gap:8px;">
         <div class="eyebrow" style="font-size:10px;">Partidas jugadas</div>
         <div class="num" style="font-family:var(--serif);font-size:36px;color:var(--ink-0);line-height:1;">{{ stats.total_matches }}</div>
@@ -41,7 +41,7 @@
 </div>
 
 <!-- Picks, Bans, Ranking -->
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px;">
+<div class="grid-cards-3" style="margin-bottom:32px;">
     <!-- Top Picks -->
     <div class="rune-card" style="padding:24px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
@@ -129,7 +129,7 @@
 {% set role_names = {'pos1': 'Carry', 'pos2': 'Mid', 'pos3': 'Offlane', 'pos4': 'Support', 'pos5': 'Hard Support'} %}
 {% set any_roles = best_roles.values() | select | list %}
 {% if any_roles %}
-<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:32px;" class="grid-roles">
+<div class="grid grid-roles" style="gap:12px;margin-bottom:32px;">
     {% for role_key in ['pos1', 'pos2', 'pos3', 'pos4', 'pos5'] %}
     {% set players_list = best_roles.get(role_key, []) %}
     <div class="rune-card" style="padding:16px;">

@@ -429,9 +429,32 @@ select.form-input { appearance: auto; }
 .w-full { width: 100%; }
 
 /* ── Roles Grid ──────────────────────────────────── */
+/* Responsive grid overrides for inline grids */
+.grid-stats-4 { display: grid; grid-template-columns: repeat(4, 1fr); }
+.grid-stats-3 { display: grid; grid-template-columns: repeat(3, 1fr); }
+.grid-cards-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.grid-compare { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; }
+.grid-compare-row { display: grid; grid-template-columns: 1fr 140px 1fr; gap: 16px; }
+.grid-profile-header { display: grid; grid-template-columns: 1fr auto; gap: 32px; }
+.grid-profile-stats { display: grid; grid-template-columns: 1fr 1fr; }
+.grid-content-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .grid-roles { grid-template-columns: repeat(5, 1fr); }
-@media (max-width: 1024px) { .grid-roles { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 640px) { .grid-roles { grid-template-columns: 1fr; } }
+@media (max-width: 1024px) {
+    .grid-roles { grid-template-columns: repeat(3, 1fr); }
+    .grid-stats-4 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+    .grid-cards-3 { grid-template-columns: 1fr; }
+    .grid-stats-3 { grid-template-columns: 1fr; }
+    .grid-compare { grid-template-columns: 1fr; }
+    .grid-compare-row { grid-template-columns: 1fr; gap: 8px; }
+    .grid-profile-header { grid-template-columns: 1fr; }
+    .grid-content-2 { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+    .grid-roles { grid-template-columns: 1fr; }
+    .grid-stats-4 { grid-template-columns: 1fr 1fr; }
+}
 
 /* ── Scoreboard ──────────────────────────────────── */
 .scoreboard { overflow: hidden; }
