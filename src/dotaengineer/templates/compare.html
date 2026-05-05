@@ -58,9 +58,9 @@
     {% for label, v1, v2, higher_better in metrics %}
     <div style="display:grid;grid-template-columns:1fr 140px 1fr;gap:16px;align-items:center;padding:12px 0;{% if not loop.last %}border-bottom:1px solid var(--line);{% endif %}">
         <div style="display:flex;align-items:center;gap:12px;">
-            <span class="num" style="font-family:var(--serif);font-size:22px;min-width:70px;text-align:right;color:{% if higher_better == true %}{% if v1 > v2 %}var(--emerald-soft){% elif v1 < v2 %}var(--ink-3){% else %}var(--ink-1){% endif %}{% else %}var(--ink-1){% endif %};">{{ v1 }}</span>
+            <span class="num" style="font-family:var(--serif);font-size:22px;min-width:70px;text-align:right;color:{% if higher_better == true %}{% if v1 > v2 %}var(--radiant){% elif v1 < v2 %}var(--ink-3){% else %}var(--ink-1){% endif %}{% else %}var(--ink-1){% endif %};">{{ v1 }}</span>
             <div style="flex:1;position:relative;height:6px;background:var(--bg-3);">
-                <div style="position:absolute;right:0;top:0;bottom:0;width:50%;background:linear-gradient(270deg,var(--emerald-deep),var(--emerald-soft));"></div>
+                <div style="position:absolute;right:0;top:0;bottom:0;width:50%;background:linear-gradient(270deg,#10b96a,var(--radiant));"></div>
             </div>
         </div>
         <div style="text-align:center;font-family:var(--mono);font-size:11px;letter-spacing:0.18em;color:var(--ink-3);text-transform:uppercase;">{{ label }}</div>
@@ -88,10 +88,10 @@
     <div style="margin-bottom:16px;">
         <div style="text-align:center;font-family:var(--mono);font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.18em;margin-bottom:6px;">{{ role_names[role_key] }}</div>
         <div style="display:flex;gap:4px;align-items:center;">
-            <span class="num" style="width:35px;text-align:right;font-size:12px;color:var(--emerald-soft);">{{ s1 if g1 > 0 else '—' }}</span>
+            <span class="num" style="width:35px;text-align:right;font-size:12px;color:var(--radiant);">{{ s1 if g1 > 0 else '—' }}</span>
             <div style="flex:1;display:flex;height:10px;gap:2px;">
                 <div style="flex:1;background:var(--bg-3);overflow:hidden;display:flex;justify-content:flex-end;">
-                    <div style="width:{{ s1 }}%;height:100%;background:linear-gradient(270deg,var(--emerald-deep),var(--emerald-soft));"></div>
+                    <div style="width:{{ s1 }}%;height:100%;background:linear-gradient(270deg,#10b96a,var(--radiant));"></div>
                 </div>
                 <div style="flex:1;background:var(--bg-3);overflow:hidden;">
                     <div style="width:{{ s2 }}%;height:100%;background:linear-gradient(90deg,var(--crimson),#ffaaa0);"></div>
@@ -116,7 +116,7 @@
             <thead>
                 <tr>
                     <th>Hero</th>
-                    <th colspan="3" style="text-align:center;color:var(--emerald-soft);">{{ p1.display_name }}</th>
+                    <th colspan="3" style="text-align:center;color:var(--radiant);">{{ p1.display_name }}</th>
                     <th colspan="3" style="text-align:center;color:#ffaaa0;">{{ p2.display_name }}</th>
                 </tr>
                 <tr><th></th><th>Games</th><th>WR</th><th>KDA</th><th>Games</th><th>WR</th><th>KDA</th></tr>
@@ -128,7 +128,7 @@
                 <tr>
                     <td><div class="hero-cell"><img src="{{ h.hero_id | hero_icon }}" class="hero-icon" alt="{{ h.hero_name }}"><span style="font-family:var(--serif);font-size:14px;">{{ h.hero_name }}</span></div></td>
                     <td class="num" style="color:var(--ink-1);">{{ h.p1.games }}</td>
-                    <td class="num" style="color:{% if wr1 >= wr2 and wr1 > 0 %}var(--emerald-soft){% elif wr1 < wr2 %}var(--ink-3){% else %}var(--ink-1){% endif %};">{{ h.p1.win_rate_pct }}</td>
+                    <td class="num" style="color:{% if wr1 >= wr2 and wr1 > 0 %}var(--radiant){% elif wr1 < wr2 %}var(--ink-3){% else %}var(--ink-1){% endif %};">{{ h.p1.win_rate_pct }}</td>
                     <td class="num" style="color:var(--ink-2);">{{ h.p1.avg_kills }}/{{ h.p1.avg_deaths }}/{{ h.p1.avg_assists }}</td>
                     <td class="num" style="color:var(--ink-1);">{{ h.p2.games }}</td>
                     <td class="num" style="color:{% if wr2 >= wr1 and wr2 > 0 %}#ffaaa0{% elif wr2 < wr1 %}var(--ink-3){% else %}var(--ink-1){% endif %};">{{ h.p2.win_rate_pct }}</td>
