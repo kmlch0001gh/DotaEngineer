@@ -435,24 +435,12 @@ public class DotaCafeParser {
         for (int pid : radiantPids) radiantKills += parser.prKills[pid / 2];
         for (int pid : direPids) direKills += parser.prKills[pid / 2];
 
-        // Determine winner.
-        // Priority: entity tracker > header > kills fallback.
-        // BUT: if the kill difference is very large (>10) and contradicts the declared
-        // winner, the game likely didn't finish recording properly (LAN issue).
-        // In that case, trust kills over the declared winner.
+        // Determine winner
         if (parser.gameWinnerEntity > 0) {
             radiantWin = (parser.gameWinnerEntity == 2);
-        } else if (gameWinner > 0) {
-            radiantWin = (gameWinner == 2);
-        }
-        // Sanity check: if kills strongly contradict declared winner, override
-        int killDiff = radiantKills - direKills;
-        if (Math.abs(killDiff) > 10) {
-            boolean killsWinner = killDiff > 0;
-            if (killsWinner != radiantWin) {
-                // Large kill advantage contradicts declared winner — game didn't finish properly
-                radiantWin = killsWinner;
-            }
+        } else if (gameWinner == 0) {
+            // No winner declared at all — fallback to kills
+            radiantWin = radiantKills > direKills;
         }
 
         // Build player list
