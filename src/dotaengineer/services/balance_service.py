@@ -141,6 +141,9 @@ def balance_teams(
     configs: list[tuple[float, BalanceResult]] = []
 
     for combo in combinations(range(10), 5):
+        # Skip mirror: only consider combos where player 0 is in team_a
+        if 0 not in combo:
+            continue
         team_a_raw = [players[i] for i in combo]
         team_b_raw = [players[i] for i in set(range(10)) - set(combo)]
 
