@@ -22,8 +22,8 @@
                 </div>
                 <div class="role-checks" style="display:none;gap:4px;flex-wrap:wrap;">
                     {% for rk, rl in [('pos1','1'),('pos2','2'),('pos3','3'),('pos4','4'),('pos5','5')] %}
-                    <label style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--ink-2);cursor:pointer;transition:all 0.2s;" class="role-label">
-                        <input type="checkbox" class="role-cb" data-player="{{ p.id }}" value="{{ rk }}" onchange="updateBalance()" style="accent-color:var(--emerald);">
+                    <label style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid var(--line);font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink-3);cursor:pointer;transition:all 0.15s;" class="role-label">
+                        <input type="checkbox" class="role-cb" data-player="{{ p.id }}" value="{{ rk }}" onchange="updateBalance()" style="display:none;">
                         {{ rl }}
                     </label>
                     {% endfor %}
@@ -50,7 +50,7 @@
 {% block scripts %}
 <style>
 .role-label { user-select: none; }
-.role-label.active { border-color: var(--emerald); color: var(--emerald-soft); background: rgba(216,184,106,0.08); }
+.role-label.active { border-color: var(--emerald); color: var(--bg-0); background: var(--emerald); }
 </style>
 <script>
 var STORAGE_KEY = 'balance_state';
