@@ -21,9 +21,9 @@
                     </div>
                 </div>
                 <div class="role-checks" style="display:none;gap:4px;flex-wrap:wrap;">
-                    {% for rk, rl in [('pos1','C'),('pos2','M'),('pos3','O'),('pos4','S'),('pos5','H')] %}
-                    <label style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;color:var(--ink-2);cursor:pointer;transition:all 0.2s;" class="role-label">
-                        <input type="checkbox" class="role-cb" data-player="{{ p.id }}" value="{{ rk }}" onchange="updateBalance()" style="display:none;">
+                    {% for rk, rl in [('pos1','1'),('pos2','2'),('pos3','3'),('pos4','4'),('pos5','5')] %}
+                    <label style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--ink-2);cursor:pointer;transition:all 0.2s;" class="role-label">
+                        <input type="checkbox" class="role-cb" data-player="{{ p.id }}" value="{{ rk }}" onchange="updateBalance()" style="accent-color:var(--emerald);">
                         {{ rl }}
                     </label>
                     {% endfor %}
