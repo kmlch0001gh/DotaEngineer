@@ -307,6 +307,70 @@ def get_best_per_role(con: Connection, limit: int = 3) -> dict[str, list[dict]]:
     return result
 
 
+def get_role_scores_batch(
+    player_ids: list[int], con: Connection
+) -> dict[int, dict[str, float]]:
+    """Get role scores for multiple players efficiently.
+
+    Pre-computes max metrics for all roles once, then scores each
+    player's matches. Returns {player_id: {role: avg_score}}.
+    """
+    # Pre-compute max metrics for all 5 roles (5 queries total)
+    all_maxes: dict[str, dict[str, float]] = {}
+    for role in ROLE_WEIGHTS:
+        all_maxes[role] = _get_max_metrics(role, con)
+
+    # Fetch all match data for these players with roles assigned
+    placeholders = ", ".join(["?"] * len(player_ids))
+    rows = con.execute(
+        f"""
+        SELECT mp.*, m.duration_seconds
+        FROM match_players mp
+        JOIN matches m ON m.id = mp.match_id
+        WHERE mp.player_id IN ({placeholders})
+          AND mp.role IS NOT NULL
+        """,
+        player_ids,
+    ).fetchall()
+    cols = [desc[0] for desc in con.description]
+
+    # Group by player_id + role, compute avg score
+    from collections import defaultdict
+
+    scores_acc: dict[tuple[int, str], list[float]] = defaultdict(list)
+    for r in rows:
+        d = dict(zip(cols, r))
+        pid = d["player_id"]
+        role = d.get("role")
+        if not role or role not in ROLE_WEIGHTS:
+            continue
+        dm = max((d.get("duration_seconds") or 1) / 60, 1)
+        metrics = _extract_metrics(d, dm)
+        maxes = all_maxes.get(role, {})
+        if not maxes:
+            continue
+        weights = ROLE_WEIGHTS[role]
+        score = 0.0
+        for metric, weight in weights.items():
+            val = metrics.get(metric, 0)
+            best = maxes.get(metric, 1)
+            if best <= 0:
+                best = 1
+            normalized = min(val / best, 1.0) * 100
+            score += normalized * weight
+        scores_acc[(pid, role)].append(round(score, 1))
+
+    # Average per player per role
+    result: dict[int, dict[str, float]] = {
+        pid: {r: 0.0 for r in ROLE_WEIGHTS} for pid in player_ids
+    }
+    for (pid, role), scores in scores_acc.items():
+        if scores:
+            result[pid][role] = round(sum(scores) / len(scores), 1)
+
+    return result
+
+
 def get_player_role_stats(player_id: int, con: Connection) -> list[dict]:
     """Get role performance breakdown for a player.
 

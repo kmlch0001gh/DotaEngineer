@@ -3,29 +3,40 @@
 
 {% block content %}
 <div style="margin-bottom:24px;">
-    <div style="color:var(--ink-2);font-family:var(--mono);font-size:12px;letter-spacing:0.08em;">Selecciona jugadores para crear equipos equilibrados</div>
+    <div style="color:var(--ink-2);font-family:var(--mono);font-size:12px;letter-spacing:0.08em;">Selecciona 10 jugadores y asigna el rol que desea cada uno</div>
 </div>
 
 <div class="rune-card" style="padding:24px;margin-bottom:24px;">
     <form id="balance-form" hx-post="/api/balance" hx-target="#balance-result" hx-swap="innerHTML">
-        <input type="hidden" name="player_ids" id="player-ids-input">
+        <input type="hidden" name="player_roles" id="player-roles-input">
 
         <div class="grid-cards-3" style="gap:12px;margin-bottom:24px;">
             {% for p in players %}
-            <label style="padding:12px;border:1px solid var(--line);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.2s;background:var(--bg-1);">
-                <input type="checkbox" class="player-checkbox" value="{{ p.id }}" onchange="updatePlayerIds()" style="accent-color:var(--emerald);">
-                <div style="flex:1;">
-                    <div style="font-family:var(--serif);font-size:15px;">{{ p.display_name }}</div>
-                    <div class="num" style="font-size:11px;color:var(--ink-2);">MMR: {{ p.mmr }} · {{ p.games_played }} games</div>
+            <div class="balance-player" style="padding:12px;border:1px solid var(--line);background:var(--bg-1);transition:all 0.2s;" data-id="{{ p.id }}">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                    <input type="checkbox" class="player-checkbox" value="{{ p.id }}" onchange="updateBalance()" style="accent-color:var(--emerald);">
+                    <div style="flex:1;">
+                        <div style="font-family:var(--serif);font-size:15px;">{{ p.display_name }}</div>
+                        <div class="num" style="font-size:11px;color:var(--ink-2);">MMR: {{ p.mmr }} · {{ p.games_played }} games</div>
+                    </div>
                 </div>
-            </label>
+                <select class="role-select form-input" data-player="{{ p.id }}" style="padding:4px 8px;font-size:12px;display:none;" onchange="updateBalance()">
+                    <option value="">Rol...</option>
+                    <option value="pos1">Pos 1 — Carry</option>
+                    <option value="pos2">Pos 2 — Mid</option>
+                    <option value="pos3">Pos 3 — Offlane</option>
+                    <option value="pos4">Pos 4 — Support</option>
+                    <option value="pos5">Pos 5 — Hard Supp</option>
+                </select>
+            </div>
             {% endfor %}
         </div>
 
         {% if players %}
-        <div style="display:flex;gap:12px;align-items:center;">
-            <button type="submit" class="btn btn-primary" id="balance-btn" onclick="return updatePlayerIds()" disabled>Balancear Equipos</button>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <button type="submit" class="btn btn-primary" id="balance-btn" onclick="return submitBalance()" disabled>Balancear Equipos</button>
             <span class="num" style="font-size:12px;" id="selected-count">0 / 10 jugadores</span>
+            <span class="num" style="font-size:11px;color:var(--ink-3);" id="role-status"></span>
         </div>
         {% else %}
         <p style="color:var(--ink-3);">Registra jugadores primero para usar esta herramienta.</p>
@@ -38,19 +49,74 @@
 
 {% block scripts %}
 <script>
-function updatePlayerIds() {
-    const checkboxes = document.querySelectorAll('.player-checkbox:checked');
-    const ids = Array.from(checkboxes).map(cb => cb.value);
-    document.getElementById('player-ids-input').value = ids.join(',');
-    const count = ids.length;
-    const label = document.getElementById('selected-count');
-    const btn = document.getElementById('balance-btn');
+function updateBalance() {
+    var checks = document.querySelectorAll('.player-checkbox');
+    var count = 0;
+    var rolesOk = true;
+    var roleCount = {pos1:0, pos2:0, pos3:0, pos4:0, pos5:0};
+
+    checks.forEach(function(cb) {
+        var card = cb.closest('.balance-player');
+        var sel = card.querySelector('.role-select');
+        if (cb.checked) {
+            count++;
+            sel.style.display = 'block';
+            card.style.borderColor = 'var(--emerald)';
+            if (sel.value) {
+                roleCount[sel.value]++;
+            } else {
+                rolesOk = false;
+            }
+        } else {
+            sel.style.display = 'none';
+            sel.value = '';
+            card.style.borderColor = 'var(--line)';
+        }
+    });
+
+    var label = document.getElementById('selected-count');
+    var btn = document.getElementById('balance-btn');
+    var status = document.getElementById('role-status');
+
     label.textContent = count + ' / 10 jugadores';
     label.style.color = count === 10 ? 'var(--radiant)' : count > 10 ? 'var(--crimson)' : 'var(--ink-2)';
-    btn.disabled = count !== 10;
-    if (count !== 10) {
+
+    // Check role distribution: exactly 2 per role
+    var roleMsg = '';
+    if (count === 10 && rolesOk) {
+        var rolePairs = Object.entries(roleCount);
+        var badRoles = rolePairs.filter(function(r) { return r[1] !== 2; });
+        if (badRoles.length > 0) {
+            var labels = {pos1:'Carry',pos2:'Mid',pos3:'Offlane',pos4:'Support',pos5:'Hard Supp'};
+            roleMsg = 'Necesitas 2 por rol: ';
+            badRoles.forEach(function(r) { roleMsg += labels[r[0]] + '(' + r[1] + ') '; });
+            rolesOk = false;
+        }
+    }
+
+    status.textContent = roleMsg;
+    status.style.color = rolesOk ? 'var(--ink-3)' : 'var(--crimson)';
+    btn.disabled = count !== 10 || !rolesOk;
+}
+
+function submitBalance() {
+    var checks = document.querySelectorAll('.player-checkbox:checked');
+    var pairs = [];
+    var valid = true;
+
+    checks.forEach(function(cb) {
+        var card = cb.closest('.balance-player');
+        var sel = card.querySelector('.role-select');
+        if (!sel.value) { valid = false; return; }
+        pairs.push(cb.value + ':' + sel.value);
+    });
+
+    if (pairs.length !== 10 || !valid) {
+        alert('Selecciona 10 jugadores, cada uno con un rol asignado.');
         return false;
     }
+
+    document.getElementById('player-roles-input').value = pairs.join(',');
     return true;
 }
 </script>

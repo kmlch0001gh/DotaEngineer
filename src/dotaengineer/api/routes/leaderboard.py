@@ -21,29 +21,33 @@ def leaderboard_json(
 
 
 @router.post("/balance", response_class=HTMLResponse)
-def balance_teams(
+def balance_teams_endpoint(
     request: Request,
-    player_ids: str = Form(...),
+    player_roles: str = Form(...),
     con: Connection = Depends(get_db),
 ):
-    """Auto-balance teams from selected players."""
+    """Auto-balance teams from selected players with roles.
+
+    Expects player_roles as "id:role,id:role,..." e.g. "1:pos1,2:pos3,..."
+    """
     try:
-        ids = [int(x.strip()) for x in player_ids.split(",") if x.strip()]
-    except ValueError:
+        pairs = [x.strip().split(":") for x in player_roles.split(",") if x.strip()]
+        role_map = {int(p[0]): p[1] for p in pairs}
+    except (ValueError, IndexError):
         return templates.TemplateResponse(
             request,
             "partials/toast.html",
-            {"message": "IDs de jugadores inválidos", "type": "error"},
+            {"message": "Formato inválido. Cada jugador necesita un rol.", "type": "error"},
         )
 
-    if len(ids) != 10:
+    if len(role_map) != 10:
         return templates.TemplateResponse(
             request,
             "partials/toast.html",
-            {"message": "Se necesitan exactamente 10 jugadores", "type": "error"},
+            {"message": "Se necesitan exactamente 10 jugadores con rol", "type": "error"},
         )
 
-    results = balance_service.balance_teams(ids, con)
+    results = balance_service.balance_teams(role_map, con)
     if not results:
         return templates.TemplateResponse(
             request,
