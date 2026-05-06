@@ -3,7 +3,7 @@
 
 {% block content %}
 <div style="margin-bottom:24px;">
-    <div style="color:var(--ink-2);font-family:var(--mono);font-size:12px;letter-spacing:0.08em;">Selecciona 10 jugadores y asigna el rol que desea cada uno</div>
+    <div style="color:var(--ink-2);font-family:var(--mono);font-size:12px;letter-spacing:0.08em;">Selecciona 10 jugadores y marca los roles que puede jugar cada uno</div>
 </div>
 
 <div class="rune-card" style="padding:24px;margin-bottom:24px;">
@@ -20,14 +20,14 @@
                         <div class="num" style="font-size:11px;color:var(--ink-2);">MMR: {{ p.mmr }} · {{ p.games_played }} games</div>
                     </div>
                 </div>
-                <select class="role-select form-input" data-player="{{ p.id }}" style="padding:4px 8px;font-size:12px;display:none;" onchange="updateBalance()">
-                    <option value="">Rol...</option>
-                    <option value="pos1">Pos 1 — Carry</option>
-                    <option value="pos2">Pos 2 — Mid</option>
-                    <option value="pos3">Pos 3 — Offlane</option>
-                    <option value="pos4">Pos 4 — Support</option>
-                    <option value="pos5">Pos 5 — Hard Supp</option>
-                </select>
+                <div class="role-checks" style="display:none;gap:4px;flex-wrap:wrap;">
+                    {% for rk, rl in [('pos1','C'),('pos2','M'),('pos3','O'),('pos4','S'),('pos5','H')] %}
+                    <label style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;color:var(--ink-2);cursor:pointer;transition:all 0.2s;" class="role-label">
+                        <input type="checkbox" class="role-cb" data-player="{{ p.id }}" value="{{ rk }}" onchange="updateBalance()" style="display:none;">
+                        {{ rl }}
+                    </label>
+                    {% endfor %}
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -48,30 +48,72 @@
 {% endblock %}
 
 {% block scripts %}
+<style>
+.role-label { user-select: none; }
+.role-label.active { border-color: var(--emerald); color: var(--emerald-soft); background: rgba(216,184,106,0.08); }
+</style>
 <script>
+var STORAGE_KEY = 'balance_state';
+
+function saveState() {
+    var state = {};
+    document.querySelectorAll('.balance-player').forEach(function(card) {
+        var id = card.dataset.id;
+        var cb = card.querySelector('.player-checkbox');
+        if (cb.checked) {
+            var roles = [];
+            card.querySelectorAll('.role-cb:checked').forEach(function(r) { roles.push(r.value); });
+            state[id] = roles;
+        }
+    });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function loadState() {
+    var state;
+    try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e) { return; }
+    if (!state) return;
+    document.querySelectorAll('.balance-player').forEach(function(card) {
+        var id = card.dataset.id;
+        if (state[id]) {
+            var cb = card.querySelector('.player-checkbox');
+            cb.checked = true;
+            state[id].forEach(function(role) {
+                var rcb = card.querySelector('.role-cb[value="' + role + '"]');
+                if (rcb) { rcb.checked = true; rcb.closest('.role-label').classList.add('active'); }
+            });
+        }
+    });
+    updateBalance();
+}
+
 function updateBalance() {
     var checks = document.querySelectorAll('.player-checkbox');
     var count = 0;
-    var rolesOk = true;
-    var roleCount = {pos1:0, pos2:0, pos3:0, pos4:0, pos5:0};
+    var allHaveRoles = true;
 
     checks.forEach(function(cb) {
         var card = cb.closest('.balance-player');
-        var sel = card.querySelector('.role-select');
+        var roleDiv = card.querySelector('.role-checks');
         if (cb.checked) {
             count++;
-            sel.style.display = 'block';
+            roleDiv.style.display = 'flex';
             card.style.borderColor = 'var(--emerald)';
-            if (sel.value) {
-                roleCount[sel.value]++;
-            } else {
-                rolesOk = false;
-            }
+            var roleCbs = card.querySelectorAll('.role-cb:checked');
+            if (roleCbs.length === 0) allHaveRoles = false;
         } else {
-            sel.style.display = 'none';
-            sel.value = '';
+            roleDiv.style.display = 'none';
             card.style.borderColor = 'var(--line)';
+            card.querySelectorAll('.role-cb').forEach(function(r) {
+                r.checked = false;
+                r.closest('.role-label').classList.remove('active');
+            });
         }
+    });
+
+    // Update role label styling
+    document.querySelectorAll('.role-cb').forEach(function(r) {
+        r.closest('.role-label').classList.toggle('active', r.checked);
     });
 
     var label = document.getElementById('selected-count');
@@ -81,22 +123,14 @@ function updateBalance() {
     label.textContent = count + ' / 10 jugadores';
     label.style.color = count === 10 ? 'var(--radiant)' : count > 10 ? 'var(--crimson)' : 'var(--ink-2)';
 
-    // Check role distribution: exactly 2 per role
-    var roleMsg = '';
-    if (count === 10 && rolesOk) {
-        var rolePairs = Object.entries(roleCount);
-        var badRoles = rolePairs.filter(function(r) { return r[1] !== 2; });
-        if (badRoles.length > 0) {
-            var labels = {pos1:'Carry',pos2:'Mid',pos3:'Offlane',pos4:'Support',pos5:'Hard Supp'};
-            roleMsg = 'Necesitas 2 por rol: ';
-            badRoles.forEach(function(r) { roleMsg += labels[r[0]] + '(' + r[1] + ') '; });
-            rolesOk = false;
-        }
-    }
+    var msg = '';
+    if (count === 10 && !allHaveRoles) msg = 'Cada jugador necesita al menos un rol';
 
-    status.textContent = roleMsg;
-    status.style.color = rolesOk ? 'var(--ink-3)' : 'var(--crimson)';
-    btn.disabled = count !== 10 || !rolesOk;
+    status.textContent = msg;
+    status.style.color = msg ? 'var(--crimson)' : 'var(--ink-3)';
+    btn.disabled = count !== 10 || !allHaveRoles;
+
+    saveState();
 }
 
 function submitBalance() {
@@ -106,18 +140,21 @@ function submitBalance() {
 
     checks.forEach(function(cb) {
         var card = cb.closest('.balance-player');
-        var sel = card.querySelector('.role-select');
-        if (!sel.value) { valid = false; return; }
-        pairs.push(cb.value + ':' + sel.value);
+        var roles = [];
+        card.querySelectorAll('.role-cb:checked').forEach(function(r) { roles.push(r.value); });
+        if (roles.length === 0) { valid = false; return; }
+        pairs.push(cb.value + ':' + roles.join('+'));
     });
 
     if (pairs.length !== 10 || !valid) {
-        alert('Selecciona 10 jugadores, cada uno con un rol asignado.');
+        alert('Cada jugador necesita al menos un rol seleccionado.');
         return false;
     }
 
     document.getElementById('player-roles-input').value = pairs.join(',');
     return true;
 }
+
+loadState();
 </script>
 {% endblock %}

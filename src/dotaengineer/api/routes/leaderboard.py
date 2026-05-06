@@ -32,12 +32,12 @@ def balance_teams_endpoint(
     """
     try:
         pairs = [x.strip().split(":") for x in player_roles.split(",") if x.strip()]
-        role_map = {int(p[0]): p[1] for p in pairs}
+        role_map = {int(p[0]): p[1].split("+") for p in pairs}
     except (ValueError, IndexError):
         return templates.TemplateResponse(
             request,
             "partials/toast.html",
-            {"message": "Formato inválido. Cada jugador necesita un rol.", "type": "error"},
+            {"message": "Formato inválido. Asigna rol a cada jugador.", "type": "error"},
         )
 
     if len(role_map) != 10:
