@@ -72,7 +72,8 @@ def sync_item_builds(
             if not phase_data or not isinstance(phase_data, dict):
                 continue
 
-            # Sort by count, take top 10
+            # Sort by count, take top 10, calculate pickrate %
+            total_phase = sum(phase_data.values()) or 1
             items = []
             for item_id_str, pick_count in sorted(
                 phase_data.items(), key=lambda x: x[1], reverse=True
@@ -82,6 +83,7 @@ def sync_item_builds(
                     "item_id": int(item_id_str),
                     "item_name": name,
                     "count": pick_count,
+                    "pickrate": round(pick_count / total_phase * 100, 1),
                 })
 
             if not items:
