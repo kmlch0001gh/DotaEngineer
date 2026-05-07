@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     # Admin (access /admin?token=THIS_VALUE to enable write mode)
     admin_token: str = "changeme"
 
+    # Pipeline API keys (optional)
+    stratz_token: str = ""
+    steam_api_key: str = ""
+
     # ELO
     elo_k_factor: int = 32
     elo_calibration_k: int = 48
