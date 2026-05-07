@@ -239,10 +239,13 @@ END $$;
 
 def init_schema() -> None:
     """Create all tables if they don't exist."""
+    from dotaengineer.pipeline.schema import PIPELINE_SCHEMA_SQL
+
     pool = get_pool()
     with pool.connection() as conn:
         conn.execute(SCHEMA_SQL)
         conn.execute(_MIGRATIONS_SQL)
+        conn.execute(PIPELINE_SCHEMA_SQL)
         conn.commit()
     log.info("database_schema_initialized", url=_mask_url(settings.database_url))
 

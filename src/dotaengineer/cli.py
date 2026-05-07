@@ -465,6 +465,111 @@ def backfill_achievements_cmd(
     console.print(f"[bold green]Done. {updated} matches updated.[/]")
 
 
+@app.command("sync-data")
+def sync_data(
+    job: str = typer.Option(
+        "", help="Job: hero-meta, item-builds, pro-players, pro-matches"
+    ),
+):
+    """Sync public Dota 2 data from OpenDota API.
+
+    Runs all jobs by default, or a specific one with --job.
+    """
+    from dotaengineer.db import get_connection, release_connection
+    from dotaengineer.pipeline.sources.opendota import OpenDotaClient
+
+    con = get_connection()
+    client = OpenDotaClient()
+
+    try:
+        if job == "hero-meta" or not job:
+            from dotaengineer.pipeline.jobs.hero_meta import sync_hero_meta
+            n = sync_hero_meta(con, client)
+            console.print(f"[green]Hero meta: {n} rows synced[/]")
+
+        if job == "hero-counters" or not job:
+            from dotaengineer.pipeline.jobs.hero_meta import sync_hero_counters
+            n = sync_hero_counters(con, client)
+            console.print(f"[green]Hero counters: {n} rows synced[/]")
+
+        if job == "item-builds" or not job:
+            from dotaengineer.pipeline.jobs.item_builds import sync_item_builds
+            n = sync_item_builds(con, client)
+            console.print(f"[green]Item builds: {n} rows synced[/]")
+
+        if job == "pro-players" or not job:
+            from dotaengineer.pipeline.jobs.pro_players import sync_pro_players
+            n = sync_pro_players(con, client)
+            console.print(f"[green]Pro players: {n} tracked[/]")
+
+        if job == "pro-matches" or not job:
+            from dotaengineer.pipeline.jobs.pro_matches import sync_pro_matches
+            n = sync_pro_matches(con, client)
+            console.print(f"[green]Pro matches: {n} synced[/]")
+
+        if job == "player-matches":
+            from dotaengineer.pipeline.jobs.pro_matches import sync_tracked_player_matches
+            n = sync_tracked_player_matches(con, client)
+            console.print(f"[green]Player matches: {n} synced[/]")
+
+        console.print("[bold green]Sync complete.[/]")
+    finally:
+        client.close()
+        release_connection(con)
+
+
+@app.command("track-player")
+def track_player(
+    account_id: int = typer.Argument(..., help="Steam account ID"),
+    name: str = typer.Option("", help="Player name"),
+    category: str = typer.Option("high_mmr", help="Category: pro or high_mmr"),
+    team: str = typer.Option("", help="Team name"),
+):
+    """Add a player to the tracking list."""
+    from dotaengineer.db import get_connection, release_connection
+    from dotaengineer.pipeline.jobs.pro_players import add_tracked_player
+
+    if not name:
+        name = f"Player_{account_id}"
+
+    con = get_connection()
+    add_tracked_player(con, account_id, name, category, team)
+    release_connection(con)
+    console.print(f"[green]Tracking {name} (ID: {account_id}, {category})[/]")
+
+
+@app.command("tracked-players")
+def list_tracked_players():
+    """List all tracked pro/high-MMR players."""
+    from rich.table import Table
+
+    from dotaengineer.db import get_connection, release_connection
+
+    con = get_connection()
+    rows = con.execute(
+        "SELECT account_id, name, team, category, region, synced_at "
+        "FROM dota_tracked_players ORDER BY category, name"
+    ).fetchall()
+    release_connection(con)
+
+    table = Table(title="Tracked Players")
+    table.add_column("Account ID")
+    table.add_column("Name")
+    table.add_column("Team")
+    table.add_column("Category")
+    table.add_column("Region")
+    table.add_column("Last Sync")
+
+    for r in rows:
+        table.add_row(
+            str(r[0]), r[1], r[2] or "", r[3], r[4] or "",
+            r[5].strftime("%Y-%m-%d %H:%M") if r[5] else "—",
+        )
+
+    console.print(table)
+    console.print(f"[dim]{len(rows)} players tracked[/]")
+
+
 @app.command("watch")
 def watch_replays(
     dir: str = typer.Option("", help="Replay directory to watch"),
