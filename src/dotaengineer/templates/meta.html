@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Meta — {{ cafe_name }}{% endblock %}
+
+{% block content %}
+<!-- Summary Stats -->
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+    <div style="color:var(--ink-2);font-family:var(--mono);font-size:12px;letter-spacing:0.08em;">
+        {{ summary.heroes }} héroes · {{ summary.builds }} builds · {{ summary.pro_players }} pros tracked
+        {% if summary.synced_at %} · sync: {{ summary.synced_at.strftime('%d/%m %H:%M') }}{% endif %}
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        {% for b in brackets %}
+        <a href="/meta?bracket={{ b }}{% if hero_id %}&hero={{ hero_id }}{% endif %}"
+           class="pill {% if b == current_bracket %}emerald{% endif %}"
+           style="text-decoration:none;font-size:9px;padding:3px 8px;">{{ b }}</a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Top Heroes by Bracket (quick overview) -->
+<div class="grid-stats-4" style="gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:24px;">
+    {% for bracket, heroes in top_by_bracket.items() %}
+    <div style="background:var(--bg-1);padding:16px;">
+        <div class="eyebrow" style="font-size:10px;margin-bottom:10px;color:var(--emerald);">{{ bracket }}</div>
+        {% for h in heroes %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;{% if not loop.last %}border-bottom:1px solid var(--line);{% endif %}">
+            <div style="display:flex;align-items:center;gap:6px;">
+                <img src="{{ h.hero_id | hero_icon }}" style="height:18px;border-radius:2px;" alt="{{ h.hero_name }}">
+                <span style="font-size:12px;color:var(--ink-1);">{{ h.hero_name }}</span>
+            </div>
+            <span class="num" style="font-size:12px;color:var(--radiant);">{{ h.win_rate }}%</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Main Content: Hero Table + Hero Detail -->
+<div class="grid-content-2">
+    <!-- Hero Meta Table -->
+    <div class="rune-card" style="padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h4 style="font-size:18px;">Heroes · {{ current_bracket }}</h4>
+            <span class="num" style="font-size:11px;color:var(--ink-3);">{{ hero_meta|length }} heroes</span>
+        </div>
+        <div style="overflow-x:auto;max-height:600px;overflow-y:auto;">
+            <table class="arcane" style="font-size:13px;">
+                <thead style="position:sticky;top:0;background:var(--bg-2);z-index:1;">
+                    <tr>
+                        <th>#</th>
+                        <th>Héroe</th>
+                        <th style="text-align:right;">WR</th>
+                        <th style="text-align:right;">Picks</th>
+                        <th style="text-align:right;">Bans</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in hero_meta %}
+                    <tr style="{% if h.hero_id == hero_id %}background:rgba(216,184,106,0.08);{% endif %}cursor:pointer;"
+                        onclick="window.location='/meta?bracket={{ current_bracket }}&hero={{ h.hero_id }}'">
+                        <td class="num" style="color:var(--ink-3);font-size:11px;">{{ loop.index }}</td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <img src="{{ h.hero_id | hero_icon }}" style="height:24px;border-radius:2px;" alt="{{ h.hero_name }}">
+                                <span style="font-size:13px;color:var(--ink-0);">{{ h.hero_name }}</span>
+                            </div>
+                        </td>
+                        <td class="num" style="text-align:right;color:{% if h.win_rate >= 52 %}var(--radiant){% elif h.win_rate <= 48 %}var(--crimson){% else %}var(--ink-1){% endif %};">{{ h.win_rate }}%</td>
+                        <td class="num" style="text-align:right;color:var(--ink-2);">{{ '{:,}'.format(h.picks) }}</td>
+                        <td class="num" style="text-align:right;color:var(--ink-2);">{{ '{:,}'.format(h.bans) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Hero Detail Panel -->
+    <div>
+        {% if selected_hero %}
+        <!-- Selected Hero Header -->
+        <div class="rune-card" style="padding:20px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+                <img src="{{ selected_hero.hero_id | hero_icon }}" style="height:48px;border-radius:4px;" alt="{{ selected_hero.hero_name }}">
+                <div>
+                    <h3 style="font-size:28px;line-height:1;">{{ selected_hero.hero_name }}</h3>
+                    <div class="num" style="font-size:12px;color:var(--ink-2);margin-top:4px;">{{ current_bracket }} bracket</div>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);">
+                <div style="background:var(--bg-1);padding:12px;text-align:center;">
+                    <div class="num" style="font-family:var(--serif);font-size:24px;color:{% if selected_hero.win_rate >= 50 %}var(--radiant){% else %}var(--crimson){% endif %};">{{ selected_hero.win_rate }}%</div>
+                    <div class="eyebrow" style="font-size:9px;">Winrate</div>
+                </div>
+                <div style="background:var(--bg-1);padding:12px;text-align:center;">
+                    <div class="num" style="font-family:var(--serif);font-size:24px;color:var(--ink-0);">{{ '{:,}'.format(selected_hero.picks) }}</div>
+                    <div class="eyebrow" style="font-size:9px;">Picks</div>
+                </div>
+                <div style="background:var(--bg-1);padding:12px;text-align:center;">
+                    <div class="num" style="font-family:var(--serif);font-size:24px;color:var(--ink-0);">{{ '{:,}'.format(selected_hero.bans) }}</div>
+                    <div class="eyebrow" style="font-size:9px;">Bans</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Counters: Bad Against + Good Against -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <!-- Bad Against (counters) -->
+            <div class="rune-card" style="padding:16px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                    <span style="width:8px;height:8px;background:var(--crimson);display:inline-block;"></span>
+                    <span class="eyebrow" style="font-size:10px;color:var(--crimson);">Débil contra</span>
+                </div>
+                {% for c in counters %}
+                <div style="display:flex;align-items:center;gap:8px;padding:4px 0;{% if not loop.last %}border-bottom:1px solid var(--line);{% endif %}">
+                    <img src="{{ c.hero_id | hero_icon }}" style="height:20px;border-radius:2px;" alt="{{ c.hero_name }}">
+                    <span style="flex:1;font-size:12px;color:var(--ink-1);">{{ c.hero_name }}</span>
+                    <span class="num" style="font-size:12px;color:var(--crimson);">{{ c.advantage }}%</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Good Against -->
+            <div class="rune-card" style="padding:16px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                    <span style="width:8px;height:8px;background:var(--radiant);display:inline-block;"></span>
+                    <span class="eyebrow" style="font-size:10px;color:var(--radiant);">Fuerte contra</span>
+                </div>
+                {% for c in best_against %}
+                <div style="display:flex;align-items:center;gap:8px;padding:4px 0;{% if not loop.last %}border-bottom:1px solid var(--line);{% endif %}">
+                    <img src="{{ c.hero_id | hero_icon }}" style="height:20px;border-radius:2px;" alt="{{ c.hero_name }}">
+                    <span style="flex:1;font-size:12px;color:var(--ink-1);">{{ c.hero_name }}</span>
+                    <span class="num" style="font-size:12px;color:var(--radiant);">+{{ c.advantage }}%</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Item Builds -->
+        {% if builds %}
+        <div class="rune-card" style="padding:16px;">
+            <div class="eyebrow" style="font-size:10px;margin-bottom:12px;color:var(--emerald);">Items populares</div>
+            {% set phase_labels = {'start': 'Inicio', 'early': 'Early Game', 'core': 'Core', 'late': 'Late Game'} %}
+            {% for phase in ['start', 'early', 'core', 'late'] %}
+            {% set items = builds.get(phase, []) %}
+            {% if items %}
+            <div style="margin-bottom:12px;">
+                <div class="num" style="font-size:11px;color:var(--ink-3);margin-bottom:6px;">{{ phase_labels.get(phase, phase) }}</div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                    {% for item in items %}
+                    <div style="display:flex;align-items:center;gap:4px;padding:4px 8px;border:1px solid var(--line);background:var(--bg-1);">
+                        <img src="{{ item.item_name | item_icon }}" style="height:20px;border-radius:2px;" alt="{{ item.item_name }}">
+                        <span class="num" style="font-size:10px;color:var(--ink-2);">{{ item.count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- No hero selected -->
+        <div class="rune-card" style="padding:32px;text-align:center;">
+            <div style="font-family:var(--serif);font-size:22px;color:var(--ink-1);margin-bottom:8px;">Selecciona un héroe</div>
+            <p style="color:var(--ink-3);font-size:13px;">Haz clic en un héroe de la tabla para ver counters, matchups e items populares.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Pro Players Section -->
+{% if pro_players %}
+<div class="rune-card" style="padding:20px;margin-top:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h4 style="font-size:18px;">Jugadores Pro Tracked</h4>
+        <span class="num" style="font-size:11px;color:var(--ink-3);">{{ summary.pro_players }} total</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        {% for p in pro_players %}
+        <div style="padding:6px 12px;border:1px solid var(--line);background:var(--bg-1);display:flex;align-items:center;gap:8px;">
+            <span style="font-size:13px;color:var(--ink-0);">{{ p.name }}</span>
+            {% if p.team %}<span class="num" style="font-size:10px;color:var(--ink-3);">{{ p.team }}</span>{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

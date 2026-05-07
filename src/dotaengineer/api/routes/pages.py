@@ -10,6 +10,7 @@ from dotaengineer.db import Connection
 from dotaengineer.services import (
     leaderboard_service,
     match_service,
+    meta_service,
     player_service,
     role_service,
 )
@@ -178,6 +179,52 @@ def balance_page(
         request,
         "leaderboard/balance.html",
         {"players": players},
+    )
+
+
+@router.get("/meta", response_class=HTMLResponse)
+def meta_page(
+    request: Request,
+    bracket: str = Query("immortal"),
+    hero: int = Query(0),
+    con: Connection = Depends(get_db),
+):
+    brackets = meta_service.get_brackets(con)
+    summary = meta_service.get_meta_summary(con)
+    hero_meta = meta_service.get_hero_meta(con, bracket=bracket, limit=50)
+    top_by_bracket = meta_service.get_top_heroes_by_bracket(con)
+    pro_players = meta_service.get_pro_players_sample(con, limit=20)
+
+    # Hero detail (counters + builds) if selected
+    counters = []
+    best_against = []
+    builds: dict = {}
+    selected_hero = None
+    if hero > 0:
+        counters = meta_service.get_hero_counters(con, hero)
+        best_against = meta_service.get_hero_best_against(con, hero)
+        builds = meta_service.get_hero_builds(con, hero)
+        for h in hero_meta:
+            if h["hero_id"] == hero:
+                selected_hero = h
+                break
+
+    return templates.TemplateResponse(
+        request,
+        "meta.html",
+        {
+            "brackets": brackets,
+            "current_bracket": bracket,
+            "summary": summary,
+            "hero_meta": hero_meta,
+            "top_by_bracket": top_by_bracket,
+            "pro_players": pro_players,
+            "selected_hero": selected_hero,
+            "hero_id": hero,
+            "counters": counters,
+            "best_against": best_against,
+            "builds": builds,
+        },
     )
 
 

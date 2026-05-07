@@ -539,6 +539,7 @@ footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; g
                     <a href="/heroes" class="{% if '/heroes' in request.url.path %}active{% endif %}">Heroes</a>
                     <a href="/balance" class="{% if '/balance' in request.url.path %}active{% endif %}">Balance</a>
                     <a href="/compare" class="{% if '/compare' in request.url.path %}active{% endif %}">Comparar</a>
+                    <a href="/meta" class="{% if '/meta' in request.url.path %}active{% endif %}">Meta</a>
                     {% if is_admin %}
                     <a href="/logout" style="color:var(--crimson);">Salir</a>
                     {% endif %}
