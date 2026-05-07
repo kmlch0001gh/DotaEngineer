@@ -150,7 +150,7 @@
                     {% for item in items %}
                     <div style="display:flex;align-items:center;gap:4px;padding:4px 8px;border:1px solid var(--line);background:var(--bg-1);">
                         <img src="{{ item.item_name | item_icon }}" style="height:20px;border-radius:2px;" alt="{{ item.item_name }}" title="{{ item.item_name.replace('_', ' ') }}">
-                        <span class="num" style="font-size:10px;color:var(--ink-2);">{{ item.pickrate or (item.count|string + 'x') }}%</span>
+                        <span class="num" style="font-size:10px;color:var(--ink-2);">{% if item.pickrate is defined and item.pickrate %}{{ item.pickrate }}%{% endif %}</span>
                     </div>
                     {% endfor %}
                 </div>
