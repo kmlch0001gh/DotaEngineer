@@ -250,10 +250,17 @@ def get_player_stats(player_id: int, con: Connection) -> PlayerStats | None:
     )
 
 
-def get_teammate_winrates(player_id: int, con: Connection) -> list[dict]:
-    """Best teammates by winrate (min 2 games together)."""
+def get_teammate_winrates(
+    player_id: int, con: Connection, sort: str = "winrate",
+) -> list[dict]:
+    """Best teammates by winrate or games (min 2 games together)."""
+    order = (
+        "count(*) DESC, (sum(CASE WHEN me.won THEN 1 ELSE 0 END)::float / count(*)) DESC"
+        if sort == "games"
+        else "(sum(CASE WHEN me.won THEN 1 ELSE 0 END)::float / count(*)) DESC, count(*) DESC"
+    )
     rows = con.execute(
-        """
+        f"""
         SELECT
             p.id, p.display_name,
             count(*) as games,
@@ -267,8 +274,7 @@ def get_teammate_winrates(player_id: int, con: Connection) -> list[dict]:
         WHERE me.player_id = ?
         GROUP BY p.id, p.display_name
         HAVING count(*) >= 2
-        ORDER BY (sum(CASE WHEN me.won THEN 1 ELSE 0 END)::float / count(*)) DESC,
-                 count(*) DESC
+        ORDER BY {order}
         LIMIT 10
         """,
         [player_id],
@@ -286,10 +292,17 @@ def get_teammate_winrates(player_id: int, con: Connection) -> list[dict]:
     ]
 
 
-def get_enemy_winrates(player_id: int, con: Connection) -> list[dict]:
-    """Worst enemies by winrate — opponents this player loses against most (min 2 games)."""
+def get_enemy_winrates(
+    player_id: int, con: Connection, sort: str = "winrate",
+) -> list[dict]:
+    """Worst enemies by winrate or games (min 2 games)."""
+    order = (
+        "count(*) DESC, (sum(CASE WHEN me.won THEN 1 ELSE 0 END)::float / count(*)) ASC"
+        if sort == "games"
+        else "(sum(CASE WHEN me.won THEN 1 ELSE 0 END)::float / count(*)) ASC, count(*) DESC"
+    )
     rows = con.execute(
-        """
+        f"""
         SELECT
             p.id, p.display_name,
             count(*) as games,
@@ -302,8 +315,7 @@ def get_enemy_winrates(player_id: int, con: Connection) -> list[dict]:
         WHERE me.player_id = ?
         GROUP BY p.id, p.display_name
         HAVING count(*) >= 2
-        ORDER BY (sum(CASE WHEN me.won THEN 1 ELSE 0 END)::float / count(*)) ASC,
-                 count(*) DESC
+        ORDER BY {order}
         LIMIT 10
         """,
         [player_id],

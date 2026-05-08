@@ -230,25 +230,30 @@
 <div class="grid-cards-2" style="margin-top:24px;">
     <!-- Best Teammates -->
     <div class="rune-card" style="padding:24px;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-            <span style="width:8px;height:8px;background:var(--radiant);display:inline-block;"></span>
-            <h4 style="font-size:18px;color:var(--radiant);">Mejores Compañeros</h4>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span style="width:8px;height:8px;background:var(--radiant);display:inline-block;"></span>
+                <h4 style="font-size:18px;color:var(--radiant);">Mejores Compañeros</h4>
+            </div>
+            <div style="display:flex;gap:4px;">
+                <button class="btn btn-sm {% if not tm_sort or tm_sort == 'winrate' %}btn-primary{% endif %}"
+                    hx-get="/api/players/{{ p.id }}/teammates?sort=winrate" hx-target="#tm-body" hx-swap="innerHTML"
+                    onclick="this.parentElement.querySelector('.btn-primary')?.classList.remove('btn-primary');this.classList.add('btn-primary');">WR</button>
+                <button class="btn btn-sm {% if tm_sort == 'games' %}btn-primary{% endif %}"
+                    hx-get="/api/players/{{ p.id }}/teammates?sort=games" hx-target="#tm-body" hx-swap="innerHTML"
+                    onclick="this.parentElement.querySelector('.btn-primary')?.classList.remove('btn-primary');this.classList.add('btn-primary');">Partidas</button>
+            </div>
         </div>
         {% if best_teammates %}
-        <table class="arcane sortable-table" id="tbl-teammates">
-            <thead><tr>
-                <th>Jugador</th>
-                <th class="sort-header" data-col="1" data-table="tbl-teammates" style="text-align:right;cursor:pointer;">Partidas ▼</th>
-                <th style="text-align:right;">W/L</th>
-                <th class="sort-header" data-col="3" data-table="tbl-teammates" style="text-align:right;cursor:pointer;">WR ▼</th>
-            </tr></thead>
-            <tbody>
+        <table class="arcane">
+            <thead><tr><th>Jugador</th><th style="text-align:right;">Partidas</th><th style="text-align:right;">W/L</th><th style="text-align:right;">WR</th></tr></thead>
+            <tbody id="tm-body">
                 {% for t in best_teammates %}
                 <tr>
                     <td style="font-family:var(--serif);font-size:14px;"><a href="/players/{{ t.player_id }}">{{ t.display_name }}</a></td>
-                    <td class="num" style="text-align:right;color:var(--ink-1);" data-val="{{ t.games }}">{{ t.games }}</td>
+                    <td class="num" style="text-align:right;color:var(--ink-1);">{{ t.games }}</td>
                     <td class="num" style="text-align:right;font-size:12px;"><span style="color:var(--radiant);">{{ t.wins }}</span>/<span style="color:#ffaaa0;">{{ t.losses }}</span></td>
-                    <td class="num" style="text-align:right;color:{% if t.win_rate >= 50 %}var(--radiant){% else %}#ffaaa0{% endif %};" data-val="{{ t.win_rate }}">{{ t.win_rate }}%</td>
+                    <td class="num" style="text-align:right;color:{% if t.win_rate >= 50 %}var(--radiant){% else %}#ffaaa0{% endif %};">{{ t.win_rate }}%</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -260,25 +265,30 @@
 
     <!-- Worst Enemies -->
     <div class="rune-card" style="padding:24px;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-            <span style="width:8px;height:8px;background:var(--dire);display:inline-block;"></span>
-            <h4 style="font-size:18px;color:#ffaaa0;">Peores Rivales</h4>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span style="width:8px;height:8px;background:var(--dire);display:inline-block;"></span>
+                <h4 style="font-size:18px;color:#ffaaa0;">Peores Rivales</h4>
+            </div>
+            <div style="display:flex;gap:4px;">
+                <button class="btn btn-sm {% if not en_sort or en_sort == 'winrate' %}btn-primary{% endif %}"
+                    hx-get="/api/players/{{ p.id }}/enemies?sort=winrate" hx-target="#en-body" hx-swap="innerHTML"
+                    onclick="this.parentElement.querySelector('.btn-primary')?.classList.remove('btn-primary');this.classList.add('btn-primary');">WR</button>
+                <button class="btn btn-sm {% if en_sort == 'games' %}btn-primary{% endif %}"
+                    hx-get="/api/players/{{ p.id }}/enemies?sort=games" hx-target="#en-body" hx-swap="innerHTML"
+                    onclick="this.parentElement.querySelector('.btn-primary')?.classList.remove('btn-primary');this.classList.add('btn-primary');">Partidas</button>
+            </div>
         </div>
         {% if worst_enemies %}
-        <table class="arcane sortable-table" id="tbl-enemies">
-            <thead><tr>
-                <th>Jugador</th>
-                <th class="sort-header" data-col="1" data-table="tbl-enemies" style="text-align:right;cursor:pointer;">Partidas ▼</th>
-                <th style="text-align:right;">W/L</th>
-                <th class="sort-header" data-col="3" data-table="tbl-enemies" style="text-align:right;cursor:pointer;">WR ▼</th>
-            </tr></thead>
-            <tbody>
+        <table class="arcane">
+            <thead><tr><th>Jugador</th><th style="text-align:right;">Partidas</th><th style="text-align:right;">W/L</th><th style="text-align:right;">WR</th></tr></thead>
+            <tbody id="en-body">
                 {% for e in worst_enemies %}
                 <tr>
                     <td style="font-family:var(--serif);font-size:14px;"><a href="/players/{{ e.player_id }}">{{ e.display_name }}</a></td>
-                    <td class="num" style="text-align:right;color:var(--ink-1);" data-val="{{ e.games }}">{{ e.games }}</td>
+                    <td class="num" style="text-align:right;color:var(--ink-1);">{{ e.games }}</td>
                     <td class="num" style="text-align:right;font-size:12px;"><span style="color:var(--radiant);">{{ e.wins }}</span>/<span style="color:#ffaaa0;">{{ e.losses }}</span></td>
-                    <td class="num" style="text-align:right;color:{% if e.win_rate >= 50 %}var(--radiant){% else %}#ffaaa0{% endif %};" data-val="{{ e.win_rate }}">{{ e.win_rate }}%</td>
+                    <td class="num" style="text-align:right;color:{% if e.win_rate >= 50 %}var(--radiant){% else %}#ffaaa0{% endif %};">{{ e.win_rate }}%</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -288,29 +298,6 @@
         {% endif %}
     </div>
 </div>
-<script>
-document.querySelectorAll('.sort-header').forEach(function(th) {
-    th.addEventListener('click', function() {
-        var tbl = document.getElementById(th.dataset.table);
-        var col = parseInt(th.dataset.col);
-        var tbody = tbl.querySelector('tbody');
-        var rows = Array.from(tbody.querySelectorAll('tr'));
-        var asc = th.dataset.asc === '1';
-        rows.sort(function(a, b) {
-            var va = parseFloat(a.cells[col].dataset.val);
-            var vb = parseFloat(b.cells[col].dataset.val);
-            return asc ? va - vb : vb - va;
-        });
-        th.dataset.asc = asc ? '0' : '1';
-        // Update arrow on all headers in this table
-        tbl.querySelectorAll('.sort-header').forEach(function(h) {
-            var txt = h.textContent.replace(/ [▲▼]/, '');
-            h.textContent = h === th ? txt + (asc ? ' ▲' : ' ▼') : txt + ' ▼';
-        });
-        rows.forEach(function(r) { tbody.appendChild(r); });
-    });
-});
-</script>
 {% endif %}
 
 <!-- MMR History Chart -->

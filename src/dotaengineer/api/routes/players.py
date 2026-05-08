@@ -86,3 +86,35 @@ def role_breakdown(
         "partials/role_breakdown.html",
         {"breakdown": breakdown, "role": role},
     )
+
+
+@router.get("/{player_id}/teammates", response_class=HTMLResponse)
+def teammates_partial(
+    request: Request,
+    player_id: int,
+    sort: str = "winrate",
+    con: Connection = Depends(get_db),
+):
+    """Return teammates table rows as HTMX partial."""
+    data = player_service.get_teammate_winrates(player_id, con, sort=sort)
+    return templates.TemplateResponse(
+        request,
+        "partials/synergy_rows.html",
+        {"rows": data, "player_id": player_id, "kind": "teammates", "sort": sort},
+    )
+
+
+@router.get("/{player_id}/enemies", response_class=HTMLResponse)
+def enemies_partial(
+    request: Request,
+    player_id: int,
+    sort: str = "winrate",
+    con: Connection = Depends(get_db),
+):
+    """Return enemies table rows as HTMX partial."""
+    data = player_service.get_enemy_winrates(player_id, con, sort=sort)
+    return templates.TemplateResponse(
+        request,
+        "partials/synergy_rows.html",
+        {"rows": data, "player_id": player_id, "kind": "enemies", "sort": sort},
+    )
