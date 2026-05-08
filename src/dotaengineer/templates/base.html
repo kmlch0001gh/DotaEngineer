@@ -337,6 +337,32 @@ select.form-input { appearance: auto; }
 .aghs-top, .aghs-bot { fill: #1f3a31; }
 .aghs-on { fill: var(--azure); }
 
+/* ── Medal / Rank Badges ────────────────────────── */
+.medal {
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+.medal-icon     { height: 36px; width: 36px; object-fit: contain; }
+.medal-icon-lg  { height: 56px; width: 56px; object-fit: contain; }
+.medal-icon-xl  { height: 80px; width: 80px; object-fit: contain; }
+.medal-stars {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+}
+.medal-label {
+    display: block;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-2);
+    margin-top: 2px;
+}
+
 /* ── Grid ────────────────────────────────────────── */
 .grid { display: grid; gap: 16px; }
 .grid-2 { grid-template-columns: repeat(2, 1fr); }

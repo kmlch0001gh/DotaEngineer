@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "partials/medal.html" import medal_badge %}
 {% block title %}{{ cafe_name }} — Inicio{% endblock %}
 
 {% block content %}
@@ -28,7 +29,10 @@
     <div style="background:var(--bg-1);padding:24px 20px;display:flex;flex-direction:column;gap:8px;">
         <div class="eyebrow" style="font-size:10px;">Top MMR</div>
         {% if stats.top_player_name %}
-        <div class="num" style="font-family:var(--serif);font-size:36px;color:var(--emerald-soft);line-height:1;">{{ stats.top_player_mmr }}</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+            {{ medal_badge(stats.top_player_mmr, size="lg") }}
+            <div class="num" style="font-family:var(--serif);font-size:36px;color:var(--emerald-soft);line-height:1;">{{ stats.top_player_mmr }}</div>
+        </div>
         <div class="num" style="font-size:11px;color:var(--ink-2);">{{ stats.top_player_name }}</div>
         {% else %}
         <div class="num" style="font-family:var(--serif);font-size:36px;color:var(--ink-3);line-height:1;">—</div>
@@ -108,11 +112,12 @@
         </div>
         {% if leaderboard %}
         <table class="arcane">
-            <thead><tr><th>#</th><th>Jugador</th><th style="text-align:right;">MMR</th></tr></thead>
+            <thead><tr><th>#</th><th></th><th>Jugador</th><th style="text-align:right;">MMR</th></tr></thead>
             <tbody>
                 {% for p in leaderboard %}
                 <tr>
                     <td class="num" style="font-family:var(--serif);font-size:16px;color:var(--ink-1);">{{ p.rank }}</td>
+                    <td style="width:32px;text-align:center;">{{ medal_badge(p.mmr) }}</td>
                     <td style="font-family:var(--serif);font-size:15px;"><a href="/players/{{ p.id }}">{{ p.display_name }}</a></td>
                     <td class="num" style="text-align:right;font-size:14px;color:var(--emerald-soft);">{{ p.mmr }}</td>
                 </tr>

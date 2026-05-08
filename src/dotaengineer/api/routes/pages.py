@@ -71,11 +71,13 @@ def match_detail(
         )
     players = player_service.list_players(con)
     mmr_changes = {}
+    mmr_at_match = {}
     for row in con.execute(
-        "SELECT player_id, mmr_change FROM mmr_history WHERE match_id = ?",
+        "SELECT player_id, mmr_change, mmr_before FROM mmr_history WHERE match_id = ?",
         [match_id],
     ).fetchall():
         mmr_changes[row[0]] = row[1]
+        mmr_at_match[row[0]] = row[2]
     # Aghanim's status per slot: check purchase log for shard, inventory for scepter
     aghs_status = {}
     shard_rows = con.execute(
@@ -106,6 +108,7 @@ def match_detail(
             "match": match,
             "players": players,
             "mmr_changes": mmr_changes,
+            "mmr_at_match": mmr_at_match,
             "aghs_status": aghs_status,
         },
     )

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "partials/medal.html" import medal_badge %}
 {% block title %}Ranking — {{ cafe_name }}{% endblock %}
 
 {% block content %}
@@ -29,7 +30,13 @@
             <h3 style="font-size:28px;line-height:1.05;">
                 <a href="/players/{{ p.id }}" style="color:var(--ink-0);text-decoration:none;">{{ p.display_name }}</a>
             </h3>
-            <div class="num" style="font-family:var(--serif);font-size:36px;color:var(--emerald-soft);">{{ p.mmr }} <span style="font-size:12px;color:var(--ink-3);font-family:var(--mono);">MMR</span></div>
+            <div style="display:flex;align-items:center;gap:12px;">
+                {{ medal_badge(p.mmr, size="xl") }}
+                <div>
+                    <div class="num" style="font-family:var(--serif);font-size:36px;color:var(--emerald-soft);">{{ p.mmr }} <span style="font-size:12px;color:var(--ink-3);font-family:var(--mono);">MMR</span></div>
+                    <div class="medal-label" style="text-align:left;">{{ get_medal(p.mmr).label }}</div>
+                </div>
+            </div>
             <div style="display:flex;gap:12px;padding-top:10px;border-top:1px solid var(--line);">
                 <div>
                     <div class="eyebrow" style="font-size:9px;">Partidas</div>
@@ -57,6 +64,7 @@
         <thead>
             <tr>
                 <th>Rango</th>
+                <th></th>
                 <th>Jugador</th>
                 <th style="text-align:right;">MMR</th>
                 <th style="text-align:right;">Partidas</th>
@@ -68,6 +76,7 @@
             {% for p in leaderboard[3:] %}
             <tr>
                 <td class="num" style="font-size:16px;color:var(--ink-1);font-family:var(--serif);">{{ p.rank }}</td>
+                <td style="width:40px;text-align:center;">{{ medal_badge(p.mmr) }}</td>
                 <td style="font-family:var(--serif);font-size:16px;">
                     <a href="/players/{{ p.id }}">{{ p.display_name }}</a>
                     <span style="color:var(--ink-3);font-family:var(--mono);font-size:11px;margin-left:8px;">@{{ p.username }}</span>

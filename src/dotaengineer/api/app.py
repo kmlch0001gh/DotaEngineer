@@ -128,6 +128,10 @@ def _item_icon(item_name: str) -> str:
 
 templates.env.filters["item_icon"] = _item_icon
 
+from dotaengineer.medals import get_medal  # noqa: E402
+
+templates.env.globals["get_medal"] = get_medal
+
 
 # ── Route modules ────────────────────────────────────────────────────────────
 

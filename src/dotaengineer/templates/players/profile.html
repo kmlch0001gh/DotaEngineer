@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "partials/medal.html" import medal_badge %}
 {% block title %}{{ stats.player.display_name }} — {{ cafe_name }}{% endblock %}
 
 {% block content %}
@@ -11,6 +12,7 @@
         <div class="eyebrow">@{{ p.username }} · Desde {{ p.created_at.strftime('%d/%m/%Y') }}</div>
         <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
             <h3 style="font-size:48px;line-height:1;" id="player-name-display">{{ p.display_name }}</h3>
+            {{ medal_badge(p.mmr, size="xl", show_label=true) }}
             {% if is_admin %}
             <button class="btn btn-sm" onclick="document.getElementById('edit-form').style.display='flex';this.style.display='none';">Editar</button>
             {% endif %}
@@ -43,7 +45,10 @@
     <div class="grid-profile-stats" style="gap:0;border:1px solid var(--line);">
         <div style="padding:14px 22px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:130px;">
             <div class="eyebrow" style="font-size:9px;">MMR</div>
-            <div class="num" style="font-family:var(--serif);font-size:28px;color:var(--emerald-soft);margin-top:4px;">{{ p.mmr }}</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+                {{ medal_badge(p.mmr) }}
+                <span class="num" style="font-family:var(--serif);font-size:28px;color:var(--emerald-soft);">{{ p.mmr }}</span>
+            </div>
         </div>
         <div style="padding:14px 22px;border-bottom:1px solid var(--line);min-width:130px;">
             <div class="eyebrow" style="font-size:9px;">Partidas</div>
