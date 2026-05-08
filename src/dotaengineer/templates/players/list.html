@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "partials/medal.html" import medal_badge %}
 {% block title %}Jugadores — {{ cafe_name }}{% endblock %}
 
 {% block content %}
@@ -17,9 +18,12 @@
                     <div style="font-family:var(--serif);font-size:20px;">{{ p.display_name }}</div>
                     <div class="eyebrow" style="font-size:10px;">@{{ p.username }}</div>
                 </div>
-                <div style="text-align:right;">
-                    <div class="num" style="font-family:var(--serif);font-size:28px;color:var(--emerald-soft);">{{ p.mmr }}</div>
-                    <div class="eyebrow" style="font-size:9px;">MMR</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    {{ medal_badge(p.mmr, size="lg") }}
+                    <div style="text-align:right;">
+                        <div class="num" style="font-family:var(--serif);font-size:28px;color:var(--emerald-soft);">{{ p.mmr }}</div>
+                        <div class="eyebrow" style="font-size:9px;">MMR</div>
+                    </div>
                 </div>
             </div>
             <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--ink-2);">
