@@ -269,7 +269,7 @@ def get_teammate_winrates(player_id: int, con: Connection) -> list[dict]:
         HAVING count(*) >= 2
         ORDER BY (sum(CASE WHEN me.won THEN 1 ELSE 0 END)::float / count(*)) DESC,
                  count(*) DESC
-        LIMIT 5
+        LIMIT 10
         """,
         [player_id],
     ).fetchall()
@@ -304,7 +304,7 @@ def get_enemy_winrates(player_id: int, con: Connection) -> list[dict]:
         HAVING count(*) >= 2
         ORDER BY (sum(CASE WHEN me.won THEN 1 ELSE 0 END)::float / count(*)) ASC,
                  count(*) DESC
-        LIMIT 5
+        LIMIT 10
         """,
         [player_id],
     ).fetchall()
