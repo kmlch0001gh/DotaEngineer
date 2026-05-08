@@ -9,7 +9,7 @@
 {%- endif -%}
 <span class="medal" title="{{ m.label }}">
   <img src="{{ m.medal_url }}" alt="{{ m.label }}" class="{{ icon_cls }}">
-  {%- if m.star_url %}<img src="{{ m.star_url }}" alt="{{ m.stars_label }}" class="medal-stars {{ icon_cls }}">{% endif -%}
+  {%- if m.star_url %}<img src="{{ m.star_url }}" alt="{{ m.stars_label }}" class="medal-stars">{% endif -%}
   {%- if show_label %}<span class="medal-label">{{ m.label }}</span>{% endif -%}
 </span>
 {%- endmacro %}
