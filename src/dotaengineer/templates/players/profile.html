@@ -225,6 +225,61 @@
     </div>
 </div>
 
+<!-- Teammates & Enemies -->
+{% if best_teammates or worst_enemies %}
+<div class="grid-cards-2" style="margin-top:24px;">
+    <!-- Best Teammates -->
+    <div class="rune-card" style="padding:24px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <span style="width:8px;height:8px;background:var(--radiant);display:inline-block;"></span>
+            <h4 style="font-size:18px;color:var(--radiant);">Mejores Compañeros</h4>
+        </div>
+        {% if best_teammates %}
+        <table class="arcane">
+            <thead><tr><th>Jugador</th><th style="text-align:right;">Partidas</th><th style="text-align:right;">W/L</th><th style="text-align:right;">WR</th></tr></thead>
+            <tbody>
+                {% for t in best_teammates %}
+                <tr>
+                    <td style="font-family:var(--serif);font-size:14px;"><a href="/players/{{ t.player_id }}">{{ t.display_name }}</a></td>
+                    <td class="num" style="text-align:right;color:var(--ink-1);">{{ t.games }}</td>
+                    <td class="num" style="text-align:right;font-size:12px;"><span style="color:var(--radiant);">{{ t.wins }}</span>/<span style="color:#ffaaa0;">{{ t.losses }}</span></td>
+                    <td class="num" style="text-align:right;color:{% if t.win_rate >= 50 %}var(--radiant){% else %}#ffaaa0{% endif %};">{{ t.win_rate }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="color:var(--ink-3);font-size:13px;">Min. 2 partidas juntos.</p>
+        {% endif %}
+    </div>
+
+    <!-- Worst Enemies -->
+    <div class="rune-card" style="padding:24px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <span style="width:8px;height:8px;background:var(--dire);display:inline-block;"></span>
+            <h4 style="font-size:18px;color:#ffaaa0;">Peores Rivales</h4>
+        </div>
+        {% if worst_enemies %}
+        <table class="arcane">
+            <thead><tr><th>Jugador</th><th style="text-align:right;">Partidas</th><th style="text-align:right;">W/L</th><th style="text-align:right;">WR</th></tr></thead>
+            <tbody>
+                {% for e in worst_enemies %}
+                <tr>
+                    <td style="font-family:var(--serif);font-size:14px;"><a href="/players/{{ e.player_id }}">{{ e.display_name }}</a></td>
+                    <td class="num" style="text-align:right;color:var(--ink-1);">{{ e.games }}</td>
+                    <td class="num" style="text-align:right;font-size:12px;"><span style="color:var(--radiant);">{{ e.wins }}</span>/<span style="color:#ffaaa0;">{{ e.losses }}</span></td>
+                    <td class="num" style="text-align:right;color:{% if e.win_rate >= 50 %}var(--radiant){% else %}#ffaaa0{% endif %};">{{ e.win_rate }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="color:var(--ink-3);font-size:13px;">Min. 2 partidas contra.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
 <!-- MMR History Chart -->
 {% if mmr_history %}
 <div class="rune-card" style="padding:24px;margin-top:24px;">

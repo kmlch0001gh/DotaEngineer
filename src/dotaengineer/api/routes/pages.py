@@ -146,6 +146,8 @@ def player_profile(
     mmr_history = leaderboard_service.get_mmr_history(player_id, con)
     mmr_by_match = {h["match_id"]: h["mmr_change"] for h in mmr_history}
     role_stats = role_service.get_player_role_stats(player_id, con)
+    best_teammates = player_service.get_teammate_winrates(player_id, con)
+    worst_enemies = player_service.get_enemy_winrates(player_id, con)
     return templates.TemplateResponse(
         request,
         "players/profile.html",
@@ -155,6 +157,8 @@ def player_profile(
             "mmr_history": mmr_history,
             "mmr_by_match": mmr_by_match,
             "role_stats": role_stats,
+            "best_teammates": best_teammates,
+            "worst_enemies": worst_enemies,
         },
     )
 

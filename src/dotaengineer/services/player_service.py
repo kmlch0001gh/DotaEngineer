@@ -248,3 +248,74 @@ def get_player_stats(player_id: int, con: Connection) -> PlayerStats | None:
         hero_breakdown=hero_breakdown,
         achievements=achievements,
     )
+
+
+def get_teammate_winrates(player_id: int, con: Connection) -> list[dict]:
+    """Best teammates by winrate (min 2 games together)."""
+    rows = con.execute(
+        """
+        SELECT
+            p.id, p.display_name,
+            count(*) as games,
+            sum(CASE WHEN me.won THEN 1 ELSE 0 END) as wins
+        FROM match_players me
+        JOIN match_players tm ON tm.match_id = me.match_id
+            AND tm.team = me.team
+            AND tm.player_id IS NOT NULL
+            AND tm.player_id != me.player_id
+        JOIN players p ON p.id = tm.player_id
+        WHERE me.player_id = ?
+        GROUP BY p.id, p.display_name
+        HAVING count(*) >= 2
+        ORDER BY (sum(CASE WHEN me.won THEN 1 ELSE 0 END)::float / count(*)) DESC,
+                 count(*) DESC
+        LIMIT 5
+        """,
+        [player_id],
+    ).fetchall()
+    return [
+        {
+            "player_id": r[0],
+            "display_name": r[1],
+            "games": r[2],
+            "wins": r[3],
+            "losses": r[2] - r[3],
+            "win_rate": round(r[3] / r[2] * 100, 1),
+        }
+        for r in rows
+    ]
+
+
+def get_enemy_winrates(player_id: int, con: Connection) -> list[dict]:
+    """Worst enemies by winrate — opponents this player loses against most (min 2 games)."""
+    rows = con.execute(
+        """
+        SELECT
+            p.id, p.display_name,
+            count(*) as games,
+            sum(CASE WHEN me.won THEN 1 ELSE 0 END) as wins
+        FROM match_players me
+        JOIN match_players en ON en.match_id = me.match_id
+            AND en.team != me.team
+            AND en.player_id IS NOT NULL
+        JOIN players p ON p.id = en.player_id
+        WHERE me.player_id = ?
+        GROUP BY p.id, p.display_name
+        HAVING count(*) >= 2
+        ORDER BY (sum(CASE WHEN me.won THEN 1 ELSE 0 END)::float / count(*)) ASC,
+                 count(*) DESC
+        LIMIT 5
+        """,
+        [player_id],
+    ).fetchall()
+    return [
+        {
+            "player_id": r[0],
+            "display_name": r[1],
+            "games": r[2],
+            "wins": r[3],
+            "losses": r[2] - r[3],
+            "win_rate": round(r[3] / r[2] * 100, 1),
+        }
+        for r in rows
+    ]
