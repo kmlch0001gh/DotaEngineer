@@ -17,7 +17,8 @@
             <button class="btn btn-sm" onclick="document.getElementById('edit-form').style.display='flex';this.style.display='none';">Editar</button>
             {% endif %}
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <span class="pill" style="font-size:9px;padding:3px 8px;{% if p.category == 'gargola' %}background:var(--dire);color:#fff;{% endif %}">{{ p.category_label }}</span>
             <a href="/compare?p1={{ p.id }}" class="pill">Comparar con...</a>
             {% if stats.current_streak > 0 %}
             <span class="pill emerald">{{ stats.current_streak }} victorias seguidas</span>

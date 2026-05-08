@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import structlog
 
-from dotaengineer.config import settings
 from dotaengineer.db import Connection
 from dotaengineer.models.player import (
     HeroBreakdown,
@@ -19,13 +18,16 @@ log = structlog.get_logger()
 
 def create_player(data: PlayerCreate, con: Connection) -> int:
     """Register a new player. Returns the new player ID."""
+    from dotaengineer.models.player import CATEGORIES
+
+    starting_mmr = CATEGORIES.get(data.category, CATEGORIES["konoha"])["starting_mmr"]
     row = con.execute(
         """
-        INSERT INTO players (username, display_name, mmr)
-        VALUES (?, ?, ?)
+        INSERT INTO players (username, display_name, mmr, category)
+        VALUES (?, ?, ?, ?)
         RETURNING id
         """,
-        [data.username, data.display_name, settings.elo_starting_mmr],
+        [data.username, data.display_name, starting_mmr, data.category],
     ).fetchone()
     player_id = row[0]
     log.info("player_created", player_id=player_id, username=data.username)

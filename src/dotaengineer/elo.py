@@ -166,12 +166,25 @@ def recalculate_all(con: Connection) -> int:
     """Wipe all MMR data and recalculate from scratch in chronological order.
 
     Returns number of matches processed.
+    Uses each player's category to determine their starting MMR.
     """
-    # Reset all players to starting MMR
+    from dotaengineer.models.player import CATEGORIES
+
+    # Reset each player to their category's starting MMR
+    for cat_key, cat_info in CATEGORIES.items():
+        con.execute(
+            """UPDATE players SET
+                mmr = ?, games_played = 0, wins = 0, losses = 0,
+                updated_at = current_timestamp
+            WHERE category = ?""",
+            [cat_info["starting_mmr"], cat_key],
+        )
+    # Fallback for players without category
     con.execute(
         """UPDATE players SET
             mmr = ?, games_played = 0, wins = 0, losses = 0,
-            updated_at = current_timestamp""",
+            updated_at = current_timestamp
+        WHERE category IS NULL""",
         [settings.elo_starting_mmr],
     )
     con.execute("DELETE FROM mmr_history")

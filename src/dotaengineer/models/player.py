@@ -6,10 +6,16 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+CATEGORIES = {
+    "konoha": {"label": "Jurado en Konoha", "starting_mmr": 1000},
+    "gargola": {"label": "Gárgola", "starting_mmr": 500},
+}
+
 
 class PlayerCreate(BaseModel):
     username: str = Field(min_length=2, max_length=20, pattern=r"^[a-zA-Z0-9_]+$")
     display_name: str = Field(min_length=1, max_length=30)
+    category: str = "konoha"
 
 
 class Player(BaseModel):
@@ -21,7 +27,16 @@ class Player(BaseModel):
     wins: int
     losses: int
     is_active: bool
+    category: str = "konoha"
     created_at: datetime
+
+    @property
+    def category_label(self) -> str:
+        return CATEGORIES.get(self.category, CATEGORIES["konoha"])["label"]
+
+    @property
+    def starting_mmr(self) -> int:
+        return CATEGORIES.get(self.category, CATEGORIES["konoha"])["starting_mmr"]
 
     @property
     def win_rate(self) -> float:

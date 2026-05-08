@@ -234,6 +234,11 @@ DO $$ BEGIN
     ALTER TABLE match_players ADD COLUMN IF NOT EXISTS godlike INTEGER DEFAULT 0;
     ALTER TABLE match_players ADD COLUMN IF NOT EXISTS beyond_godlike INTEGER DEFAULT 0;
 END $$;
+
+-- Player categories
+DO $$ BEGIN
+    ALTER TABLE players ADD COLUMN IF NOT EXISTS category VARCHAR DEFAULT 'konoha';
+END $$;
 """
 
 

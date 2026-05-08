@@ -18,6 +18,7 @@ def register_player(
     request: Request,
     username: str = Form(...),
     display_name: str = Form(...),
+    category: str = Form("konoha"),
     con: Connection = Depends(get_db),
 ):
     """Register a new player (admin only)."""
@@ -33,7 +34,7 @@ def register_player(
         )
 
     try:
-        data = PlayerCreate(username=username, display_name=display_name)
+        data = PlayerCreate(username=username, display_name=display_name, category=category)
     except Exception:
         return templates.TemplateResponse(
             request,
