@@ -32,30 +32,32 @@ public class DotaCafeParser {
     final int[] prAssists = new int[20];
     final int[] prLevel = new int[20];
     final int[] prHeroId = new int[20];
+    final int[] prTeamSlot = new int[20]; // m_iTeamSlot → index into m_vecDataTeam
 
-    // Per-team-slot stats from CDOTA_DataRadiant/Dire (indexed 0-4)
-    // [0]=radiant, [1]=dire
-    final int[][] netWorthT = new int[2][5];
-    final int[][] lastHitsT = new int[2][5];
-    final int[][] deniesT = new int[2][5];
-    final int[][] heroDamageT = new int[2][5];
-    final int[][] towerDamageT = new int[2][5];
-    final int[][] heroHealingT = new int[2][5];
-    final int[][] totalGoldT = new int[2][5];
-    final int[][] totalXPT = new int[2][5];
+    // Per-team-slot stats from CDOTA_DataRadiant/Dire (indexed by m_iTeamSlot, may exceed 4)
+    // [0]=radiant, [1]=dire; use 10 slots to handle LAN quirks
+    static final int MAX_TEAM_SLOTS = 10;
+    final int[][] netWorthT = new int[2][MAX_TEAM_SLOTS];
+    final int[][] lastHitsT = new int[2][MAX_TEAM_SLOTS];
+    final int[][] deniesT = new int[2][MAX_TEAM_SLOTS];
+    final int[][] heroDamageT = new int[2][MAX_TEAM_SLOTS];
+    final int[][] towerDamageT = new int[2][MAX_TEAM_SLOTS];
+    final int[][] heroHealingT = new int[2][MAX_TEAM_SLOTS];
+    final int[][] totalGoldT = new int[2][MAX_TEAM_SLOTS];
+    final int[][] totalXPT = new int[2][MAX_TEAM_SLOTS];
     // New role-relevant stats
-    final int[][] obsWardsPlacedT = new int[2][5];
-    final int[][] sentryWardsPlacedT = new int[2][5];
-    final int[][] wardsDestroyedT = new int[2][5];
-    final int[][] campsStackedT = new int[2][5];
-    final float[][] stunDurationT = new float[2][5];
-    final int[][] smokesUsedT = new int[2][5];
-    final int[][] goldSpentSupportT = new int[2][5];
-    final int[][] goldSpentBuybacksT = new int[2][5];
-    final float[][] damageTakenT = new float[2][5];
-    final int[][] runePickupsT = new int[2][5];
-    final int[][] roshanKillsT = new int[2][5];
-    final int[][] towerKillsT = new int[2][5];
+    final int[][] obsWardsPlacedT = new int[2][MAX_TEAM_SLOTS];
+    final int[][] sentryWardsPlacedT = new int[2][MAX_TEAM_SLOTS];
+    final int[][] wardsDestroyedT = new int[2][MAX_TEAM_SLOTS];
+    final int[][] campsStackedT = new int[2][MAX_TEAM_SLOTS];
+    final float[][] stunDurationT = new float[2][MAX_TEAM_SLOTS];
+    final int[][] smokesUsedT = new int[2][MAX_TEAM_SLOTS];
+    final int[][] goldSpentSupportT = new int[2][MAX_TEAM_SLOTS];
+    final int[][] goldSpentBuybacksT = new int[2][MAX_TEAM_SLOTS];
+    final float[][] damageTakenT = new float[2][MAX_TEAM_SLOTS];
+    final int[][] runePickupsT = new int[2][MAX_TEAM_SLOTS];
+    final int[][] roshanKillsT = new int[2][MAX_TEAM_SLOTS];
+    final int[][] towerKillsT = new int[2][MAX_TEAM_SLOTS];
 
     // Multi-kills and kill streaks per player (indexed by playerID/2, like prKills)
     final int[] multiKill2 = new int[20]; // double kill
@@ -72,8 +74,8 @@ public class DotaCafeParser {
     final int[] streak10 = new int[20];   // beyond godlike
 
     // Special objectives per team-slot
-    final int[][] courierKillsT = new int[2][5];
-    final int[][] tormentorKillsT = new int[2][5];
+    final int[][] courierKillsT = new int[2][MAX_TEAM_SLOTS];
+    final int[][] tormentorKillsT = new int[2][MAX_TEAM_SLOTS];
 
     // Hero name → playerID mapping (from combat log names)
     final Map<String, Integer> heroNameToPlayerIdx = new HashMap<>();
@@ -121,10 +123,12 @@ public class DotaCafeParser {
                     prLevel[i] = ri(e, p + "m_iLevel");
                     int hid = ri(e, p + "m_nSelectedHeroID");
                     if (hid > 0) prHeroId[i] = hid;
+                    int ts = ri(e, p + "m_iTeamSlot");
+                    prTeamSlot[i] = ts;
                 }
             } else if ("CDOTA_DataRadiant".equals(dt) || "CDOTA_DataDire".equals(dt)) {
                 int t = "CDOTA_DataRadiant".equals(dt) ? 0 : 1;
-                for (int i = 0; i < 5; i++) {
+                for (int i = 0; i < MAX_TEAM_SLOTS; i++) {
                     String p = "m_vecDataTeam." + pad(i) + ".";
                     netWorthT[t][i] = ri(e, p + "m_iNetWorth");
                     lastHitsT[t][i] = ri(e, p + "m_iLastHitCount");
@@ -264,23 +268,18 @@ public class DotaCafeParser {
         }
     }
 
-    /** Resolve hero name to [team, teamSlot] pair. */
+    /** Resolve hero name to [team, teamSlot] pair using m_iTeamSlot. */
     private int[] resolveTeamSlot(String heroName) {
         int idx = resolvePlayerIdx(heroName);
         if (idx < 0) return null;
-        // Find this player's team and slot from playerTeam map
+        // Find this player's team from playerTeam map
         for (Map.Entry<Integer, Integer> e : playerTeam.entrySet()) {
             int pid = e.getKey();
             if (pid / 2 == idx) {
                 int team = e.getValue();
                 int t = (team == 2) ? 0 : 1;
-                List<Integer> teamPids = new ArrayList<>();
-                for (Map.Entry<Integer, Integer> e2 : playerTeam.entrySet()) {
-                    if (e2.getValue().equals(team)) teamPids.add(e2.getKey());
-                }
-                Collections.sort(teamPids);
-                int teamSlot = teamPids.indexOf(pid);
-                if (teamSlot < 0 || teamSlot >= 5) return null;
+                int teamSlot = prTeamSlot[idx];
+                if (teamSlot < 0 || teamSlot >= MAX_TEAM_SLOTS) return null;
                 return new int[]{t, teamSlot};
             }
         }
@@ -455,9 +454,12 @@ public class DotaCafeParser {
         String[] teamNames = {"radiant", "dire"};
 
         for (int t = 0; t < 2; t++) {
-            for (int teamSlot = 0; teamSlot < teamPids[t].length; teamSlot++) {
-                int pid = teamPids[t][teamSlot];
+            for (int sortedIdx = 0; sortedIdx < teamPids[t].length; sortedIdx++) {
+                int pid = teamPids[t][sortedIdx];
                 int prIdx = pid / 2;
+                // Use m_iTeamSlot from PlayerResource — the real index into m_vecDataTeam
+                int teamSlot = parser.prTeamSlot[prIdx];
+                if (teamSlot < 0 || teamSlot >= DotaCafeParser.MAX_TEAM_SLOTS) teamSlot = sortedIdx;
                 String pname = parser.playerName.getOrDefault(pid, "");
                 int heroId = parser.prHeroId[prIdx];
                 String heroKey = findHeroKey(parser, heroId);
