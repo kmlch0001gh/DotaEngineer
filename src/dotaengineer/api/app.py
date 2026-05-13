@@ -117,10 +117,37 @@ def _hero_icon(hero_id: int) -> str:
 templates.env.filters["hero_icon"] = _hero_icon
 
 
+_ITEM_CDN_FIXES: dict[str, str] = {
+    "battlefury": "bfury",
+    "boots_of_speed": "boots",
+    "boots_of_travel": "travel_boots",
+    "boots_of_travel_2": "travel_boots_2",
+    "cranium_basher": "basher",
+    "divine_rapier": "rapier",
+    "eaglehorn": "eagle",
+    "forage_health": "flask",
+    "gris_gris": "grisgris",
+    "invisibility_edge": "invis_sword",
+    "ironwood_branch": "branches",
+    "lesser_critical": "lesser_crit",
+    "moonshard": "moon_shard",
+    "observer_ward": "ward_observer",
+    "orchid_malevolence": "orchid",
+    "perseverance": "pers",
+    "robe_of_magi": "robe",
+    "sacred_relic": "relic",
+    "sentry_ward": "ward_sentry",
+}
+
+
 def _item_icon(item_name: str) -> str:
     """Jinja2 filter: item short name → CDN icon URL."""
     if not item_name:
         return ""
+    if item_name.startswith("recipe_"):
+        item_name = "recipe"
+    else:
+        item_name = _ITEM_CDN_FIXES.get(item_name, item_name)
     return (
         f"https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/{item_name}.png"
     )
