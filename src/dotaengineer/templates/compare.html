@@ -107,6 +107,62 @@
     {% endfor %}
 </div>
 
+<!-- Logros Comparison -->
+{% set a1 = stats1.achievements %}
+{% set a2 = stats2.achievements %}
+{% set achiev_rows = [
+    ('Multi-Kills', [
+        ('Rampage', a1.rampage, a2.rampage, '#ff4500'),
+        ('Ultra Kill', a1.ultra_kills, a2.ultra_kills, 'var(--dire)'),
+        ('Triple Kill', a1.triple_kills, a2.triple_kills, 'var(--gold)'),
+        ('Double Kill', a1.double_kills, a2.double_kills, 'var(--ink-1)'),
+    ]),
+    ('Rachas', [
+        ('Beyond Godlike', a1.beyond_godlike, a2.beyond_godlike, '#ff4500'),
+        ('Godlike', a1.godlike, a2.godlike, 'var(--dire)'),
+        ('Monster Kill', a1.monster_kill, a2.monster_kill, 'var(--dire)'),
+        ('Wicked Sick', a1.wicked_sick, a2.wicked_sick, 'var(--gold)'),
+        ('Unstoppable', a1.unstoppable, a2.unstoppable, 'var(--gold)'),
+        ('Mega Kill', a1.mega_kills, a2.mega_kills, 'var(--ink-1)'),
+        ('Dominating', a1.dominating, a2.dominating, 'var(--ink-1)'),
+        ('Killing Spree', a1.killing_sprees, a2.killing_sprees, 'var(--ink-2)'),
+    ]),
+    ('Objetivos', [
+        ('Roshan Kills', a1.roshan_kills, a2.roshan_kills, 'var(--ink-1)'),
+        ('Tormentor Kills', a1.tormentor_kills, a2.tormentor_kills, 'var(--ink-1)'),
+        ('Courier Kills', a1.courier_kills, a2.courier_kills, 'var(--ink-1)'),
+    ]),
+] %}
+{% set ns_ach = namespace(has_any=false) %}
+{% for group_name, rows in achiev_rows %}{% for label, v1, v2, color in rows %}{% if v1 or v2 %}{% set ns_ach.has_any = true %}{% endif %}{% endfor %}{% endfor %}
+{% if ns_ach.has_any %}
+<div class="rune-card" style="padding:24px;margin-bottom:24px;">
+    <h4 style="font-size:18px;margin-bottom:16px;">Logros</h4>
+    {% for group_name, rows in achiev_rows %}
+    {% set ns_grp = namespace(has=false) %}
+    {% for label, v1, v2, color in rows %}{% if v1 or v2 %}{% set ns_grp.has = true %}{% endif %}{% endfor %}
+    {% if ns_grp.has %}
+    <div style="{% if not loop.first %}margin-top:16px;padding-top:16px;border-top:1px solid var(--line);{% endif %}">
+        <div class="eyebrow" style="font-size:10px;margin-bottom:12px;color:var(--emerald);text-align:center;">{{ group_name }}</div>
+        {% for label, v1, v2, color in rows %}
+        {% if v1 or v2 %}
+        <div class="grid-compare-row" style="align-items:center;padding:8px 0;">
+            <div style="text-align:right;">
+                <span class="num" style="font-family:var(--serif);font-size:20px;color:{% if v1 > v2 %}var(--radiant){% elif v1 < v2 %}var(--ink-3){% else %}var(--ink-1){% endif %};">{{ v1 or '—' }}</span>
+            </div>
+            <div style="text-align:center;font-family:var(--mono);font-size:11px;letter-spacing:0.12em;color:{{ color }};">{{ label }}</div>
+            <div>
+                <span class="num" style="font-family:var(--serif);font-size:20px;color:{% if v2 > v1 %}#ffaaa0{% elif v2 < v1 %}var(--ink-3){% else %}var(--ink-1){% endif %};">{{ v2 or '—' }}</span>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+
 <!-- Heroes en Comun -->
 <div class="rune-card" style="padding:24px;margin-bottom:24px;">
     <h4 style="font-size:18px;margin-bottom:16px;">Heroes en Comun</h4>
